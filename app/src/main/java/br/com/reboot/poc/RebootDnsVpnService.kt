@@ -44,25 +44,99 @@ class RebootDnsVpnService : VpnService() {
                     tunnel = fd
                     running.set(true)
                     Log.i(TAG, "TUN estabelecido; DNS ainda NAO encaminhado")
-                    readerThread = thread(name = "tun-reader", isDaemon = true) {
+
+                    readerThread = thread(
+                        name = "tun-reader",
+                        isDaemon = true
+                    ) {
                         val buffer = ByteArray(32767)
+
                         var packets = 0L
+                        var dnsPackets = 0L
+                        var otherPackets = 0L
+                        var malformedPackets = 0L
+
+                        var exitReason = "unknown"
+
                         try {
-                            FileInputStream(fd.fileDescriptor).use { stream ->
-                                while (running.get()) {
-                                    val count = stream.read(buffer)
-                                    if (count <= 0) break
-                                    packets++
-                                    // Somente contagem: não registrar payload nem nomes DNS.
-                                    if (packets % 25L == 0L) Log.i(TAG, "pacotes_TUN=$packets")
+                            // O fechamento do descriptor continua
+                            // sendo responsabilidade de shutdown().
+                            val stream = FileInputStream(fd.fileDescriptor)
+
+                            while (running.get()) {
+                                val count = stream.read(buffer)
+
+                                if (count == -1) {
+                                    exitReason = "eof"
+                                    break
+                                }
+
+                                if (count == 0) continue
+
+                                packets++
+
+                                when (
+                                    DnsPacketClassifier.classify(
+                                        buffer,
+                                        count
+                                    )
+                                ) {
+                                    PacketKind.DNS_UDP_53 -> dnsPackets++
+                                    PacketKind.OTHER -> otherPackets++
+                                    PacketKind.MALFORMED -> malformedPackets++
+                                }
+
+                                Log.i(
+                                    TAG,
+                                    "tun_stats " +
+                                            "packets=$packets " +
+                                            "udp53=$dnsPackets " +
+                                            "other=$otherPackets " +
+                                            "malformed=$malformedPackets"
+                                )
+
+                                // Ainda não encaminhamos os pacotes.
+                                // Esta etapa é somente diagnóstico.
+                            }
+
+                            if (exitReason == "unknown") {
+                                exitReason = "stop-requested"
+                            }
+
+                        } catch (ex: Exception) {
+                            exitReason = if (running.get()) {
+                                Log.e(TAG, "Falha na leitura TUN", ex)
+                                "read-error"
+                            } else {
+                                "stop-requested"
+                            }
+                        } finally {
+                            Log.i(
+                                TAG,
+                                "Leitor TUN encerrado " +
+                                        "reason=$exitReason " +
+                                        "packets=$packets " +
+                                        "udp53=$dnsPackets " +
+                                        "other=$otherPackets " +
+                                        "malformed=$malformedPackets"
+                            )
+
+                            if (running.get()) {
+                                // Saída inesperada: não deixar
+                                // uma VPN sem leitor em funcionamento.
+                                android.os.Handler(mainLooper).post {
+                                    if (running.get()) {
+                                        Log.w(
+                                            TAG,
+                                            "Encerrando VPN: leitor TUN terminou"
+                                        )
+                                        shutdown()
+                                    }
                                 }
                             }
-                        } catch (ex: Exception) {
-                            if (running.get()) Log.e(TAG, "Falha na leitura TUN", ex)
-                        } finally {
-                            Log.i(TAG, "Leitor TUN encerrado. pacotes_TUN=$packets")
                         }
                     }
+
                 } catch (ex: Exception) {
                     Log.e(TAG, "VPN não iniciada", ex)
                     shutdown()
