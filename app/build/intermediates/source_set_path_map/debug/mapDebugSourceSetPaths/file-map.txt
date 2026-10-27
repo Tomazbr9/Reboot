@@ -1,0 +1,7 @@
+br.com.reboot.poc.app-pngs-0 /home/tomaz/Downloads/reboot-dns-vpn-poc-android/reboot-poc/app/build/generated/res/pngs/debug
+br.com.reboot.poc.app-resValues-1 /home/tomaz/Downloads/reboot-dns-vpn-poc-android/reboot-poc/app/build/generated/res/resValues/debug
+br.com.reboot.poc.app-packageDebugResources-2 /home/tomaz/Downloads/reboot-dns-vpn-poc-android/reboot-poc/app/build/intermediates/incremental/debug/packageDebugResources/merged.dir
+br.com.reboot.poc.app-packageDebugResources-3 /home/tomaz/Downloads/reboot-dns-vpn-poc-android/reboot-poc/app/build/intermediates/incremental/debug/packageDebugResources/stripped.dir
+br.com.reboot.poc.app-debug-4 /home/tomaz/Downloads/reboot-dns-vpn-poc-android/reboot-poc/app/build/intermediates/merged_res/debug/mergeDebugResources
+br.com.reboot.poc.app-debug-5 /home/tomaz/Downloads/reboot-dns-vpn-poc-android/reboot-poc/app/src/debug/res
+br.com.reboot.poc.app-main-6 /home/tomaz/Downloads/reboot-dns-vpn-poc-android/reboot-poc/app/src/main/res
