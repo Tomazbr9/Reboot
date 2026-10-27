@@ -13,6 +13,7 @@ import android.util.Log
 import java.io.FileInputStream
 import java.util.concurrent.atomic.AtomicBoolean
 import kotlin.concurrent.thread
+import java.io.FileOutputStream
 
 class RebootDnsVpnService : VpnService() {
     companion object {
@@ -25,6 +26,10 @@ class RebootDnsVpnService : VpnService() {
     private var tunnel: ParcelFileDescriptor? = null
     private var readerThread: Thread? = null
     private val running = AtomicBoolean(false)
+
+    private val dnsForwarder by lazy {
+        DnsUpstreamForwarder(this)
+    }
 
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
         when (intent?.action) {
@@ -55,6 +60,9 @@ class RebootDnsVpnService : VpnService() {
                         var dnsPackets = 0L
                         var otherPackets = 0L
                         var malformedPackets = 0L
+                        var upstreamResponses = 0L
+                        var tunResponsesWritten = 0L
+
 
                         var exitReason = "unknown"
 
@@ -62,6 +70,7 @@ class RebootDnsVpnService : VpnService() {
                             // O fechamento do descriptor continua
                             // sendo responsabilidade de shutdown().
                             val stream = FileInputStream(fd.fileDescriptor)
+                            val output = FileOutputStream(fd.fileDescriptor)
 
                             while (running.get()) {
                                 val count = stream.read(buffer)
@@ -81,7 +90,80 @@ class RebootDnsVpnService : VpnService() {
                                         count
                                     )
                                 ) {
-                                    PacketKind.DNS_UDP_53 -> dnsPackets++
+
+                                    PacketKind.DNS_UDP_53 -> {
+                                        dnsPackets++
+
+                                        val query = DnsQueryExtractor.extract(
+                                            buffer,
+                                            count
+                                        )
+
+
+                                        if (query != null) {
+                                            try {
+                                                val response = dnsForwarder.forward(query)
+
+                                                val filterProbeResult = DnsFilterProbe.inspect(
+                                                    queryPayload = query.payload,
+                                                    responsePayload = response
+                                                )
+
+                                                if (filterProbeResult != null) {
+                                                    Log.i(
+                                                        TAG,
+                                                        "DNS_FILTER_PROBE result=$filterProbeResult"
+                                                    )
+                                                }
+
+                                                upstreamResponses++
+
+                                                val replyPacket =
+                                                    DnsResponsePacketBuilder.build(
+                                                        request = buffer,
+                                                        requestLength = count,
+                                                        dnsResponse = response
+                                                    )
+
+                                                if (replyPacket != null) {
+                                                    if (running.get()) {
+                                                        output.write(replyPacket)
+
+                                                        tunResponsesWritten++
+
+                                                        Log.i(
+                                                            TAG,
+                                                            "DNS_RELAY_OK " +
+                                                                    "upstream=$upstreamResponses " +
+                                                                    "tunWritten=$tunResponsesWritten " +
+                                                                    "responseBytes=${replyPacket.size}"
+                                                        )
+
+
+                                                        Log.i(
+                                                            TAG,
+                                                            "dns_tun_response_written " +
+                                                                    "bytes=${replyPacket.size}"
+                                                        )
+                                                    }
+                                                } else {
+                                                    Log.w(
+                                                        TAG,
+                                                        "dns_response_packet_rejected"
+                                                    )
+                                                }
+
+                                            } catch (ex: Exception) {
+                                                Log.w(
+                                                    TAG,
+                                                    "dns_relay_failed " +
+                                                            "type=${ex.javaClass.simpleName}"
+                                                )
+                                            }
+                                        }
+
+                                    }
+
                                     PacketKind.OTHER -> otherPackets++
                                     PacketKind.MALFORMED -> malformedPackets++
                                 }
