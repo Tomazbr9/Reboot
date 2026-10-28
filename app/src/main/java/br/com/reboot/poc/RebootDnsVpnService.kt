@@ -3,259 +3,268 @@ package br.com.reboot.poc
 import android.app.Notification
 import android.app.NotificationChannel
 import android.app.NotificationManager
-import android.app.Service
 import android.content.Intent
 import android.content.pm.ServiceInfo
 import android.net.VpnService
 import android.os.Build
+import android.os.Handler
 import android.os.ParcelFileDescriptor
 import android.util.Log
 import java.io.FileInputStream
+import java.io.FileOutputStream
 import java.util.concurrent.atomic.AtomicBoolean
 import kotlin.concurrent.thread
-import java.io.FileOutputStream
 
 class RebootDnsVpnService : VpnService() {
+
     companion object {
         const val ACTION_START = "br.com.reboot.poc.START"
         const val ACTION_STOP = "br.com.reboot.poc.STOP"
+
         private const val CHANNEL = "vpn_poc"
         private const val TAG = "RebootDnsPoc"
     }
 
     private var tunnel: ParcelFileDescriptor? = null
     private var readerThread: Thread? = null
+    private var dispatcher: DnsRelayDispatcher? = null
+
     private val running = AtomicBoolean(false)
 
-    private val dnsForwarder by lazy {
-        DnsUpstreamForwarder(this)
-    }
-
-    override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
+    override fun onStartCommand(
+        intent: Intent?,
+        flags: Int,
+        startId: Int
+    ): Int {
         when (intent?.action) {
+            ACTION_START -> startVpn()
             ACTION_STOP -> shutdown()
-            ACTION_START -> {
-                if (running.get()) return START_NOT_STICKY
-                promoteToForeground()
-                try {
-                    check(prepare(this) == null) { "Permissão VPN ausente" }
-                    val fd = Builder()
-                        .setSession("Reboot DNS - PoC sem forwarding")
-                        .setMtu(1500)
-                        .addAddress("10.111.0.1", 32)
-                        .addDnsServer("10.111.0.2")
-                        .addRoute("10.111.0.2", 32)
-                        .establish() ?: error("establish() retornou null")
-                    tunnel = fd
-                    running.set(true)
-                    Log.i(TAG, "TUN estabelecido; DNS ainda NAO encaminhado")
-
-                    readerThread = thread(
-                        name = "tun-reader",
-                        isDaemon = true
-                    ) {
-                        val buffer = ByteArray(32767)
-
-                        var packets = 0L
-                        var dnsPackets = 0L
-                        var otherPackets = 0L
-                        var malformedPackets = 0L
-                        var upstreamResponses = 0L
-                        var tunResponsesWritten = 0L
-
-
-                        var exitReason = "unknown"
-
-                        try {
-                            // O fechamento do descriptor continua
-                            // sendo responsabilidade de shutdown().
-                            val stream = FileInputStream(fd.fileDescriptor)
-                            val output = FileOutputStream(fd.fileDescriptor)
-
-                            while (running.get()) {
-                                val count = stream.read(buffer)
-
-                                if (count == -1) {
-                                    exitReason = "eof"
-                                    break
-                                }
-
-                                if (count == 0) continue
-
-                                packets++
-
-                                when (
-                                    DnsPacketClassifier.classify(
-                                        buffer,
-                                        count
-                                    )
-                                ) {
-
-                                    PacketKind.DNS_UDP_53 -> {
-                                        dnsPackets++
-
-                                        val query = DnsQueryExtractor.extract(
-                                            buffer,
-                                            count
-                                        )
-
-
-                                        if (query != null) {
-                                            try {
-                                                val response = dnsForwarder.forward(query)
-
-                                                val filterProbeResult = DnsFilterProbe.inspect(
-                                                    queryPayload = query.payload,
-                                                    responsePayload = response
-                                                )
-
-                                                if (filterProbeResult != null) {
-                                                    Log.i(
-                                                        TAG,
-                                                        "DNS_FILTER_PROBE result=$filterProbeResult"
-                                                    )
-                                                }
-
-                                                upstreamResponses++
-
-                                                val replyPacket =
-                                                    DnsResponsePacketBuilder.build(
-                                                        request = buffer,
-                                                        requestLength = count,
-                                                        dnsResponse = response
-                                                    )
-
-                                                if (replyPacket != null) {
-                                                    if (running.get()) {
-                                                        output.write(replyPacket)
-
-                                                        tunResponsesWritten++
-
-                                                        Log.i(
-                                                            TAG,
-                                                            "DNS_RELAY_OK " +
-                                                                    "upstream=$upstreamResponses " +
-                                                                    "tunWritten=$tunResponsesWritten " +
-                                                                    "responseBytes=${replyPacket.size}"
-                                                        )
-
-
-                                                        Log.i(
-                                                            TAG,
-                                                            "dns_tun_response_written " +
-                                                                    "bytes=${replyPacket.size}"
-                                                        )
-                                                    }
-                                                } else {
-                                                    Log.w(
-                                                        TAG,
-                                                        "dns_response_packet_rejected"
-                                                    )
-                                                }
-
-                                            } catch (ex: Exception) {
-                                                Log.w(
-                                                    TAG,
-                                                    "dns_relay_failed " +
-                                                            "type=${ex.javaClass.simpleName}"
-                                                )
-                                            }
-                                        }
-
-                                    }
-
-                                    PacketKind.OTHER -> otherPackets++
-                                    PacketKind.MALFORMED -> malformedPackets++
-                                }
-
-                                Log.i(
-                                    TAG,
-                                    "tun_stats " +
-                                            "packets=$packets " +
-                                            "udp53=$dnsPackets " +
-                                            "other=$otherPackets " +
-                                            "malformed=$malformedPackets"
-                                )
-
-                                // Ainda não encaminhamos os pacotes.
-                                // Esta etapa é somente diagnóstico.
-                            }
-
-                            if (exitReason == "unknown") {
-                                exitReason = "stop-requested"
-                            }
-
-                        } catch (ex: Exception) {
-                            exitReason = if (running.get()) {
-                                Log.e(TAG, "Falha na leitura TUN", ex)
-                                "read-error"
-                            } else {
-                                "stop-requested"
-                            }
-                        } finally {
-                            Log.i(
-                                TAG,
-                                "Leitor TUN encerrado " +
-                                        "reason=$exitReason " +
-                                        "packets=$packets " +
-                                        "udp53=$dnsPackets " +
-                                        "other=$otherPackets " +
-                                        "malformed=$malformedPackets"
-                            )
-
-                            if (running.get()) {
-                                // Saída inesperada: não deixar
-                                // uma VPN sem leitor em funcionamento.
-                                android.os.Handler(mainLooper).post {
-                                    if (running.get()) {
-                                        Log.w(
-                                            TAG,
-                                            "Encerrando VPN: leitor TUN terminou"
-                                        )
-                                        shutdown()
-                                    }
-                                }
-                            }
-                        }
-                    }
-
-                } catch (ex: Exception) {
-                    Log.e(TAG, "VPN não iniciada", ex)
-                    shutdown()
-                }
-            }
         }
+
         return START_NOT_STICKY
     }
 
+    private fun startVpn() {
+        if (running.get()) return
+
+        promoteToForeground()
+
+        try {
+            check(prepare(this) == null) {
+                "Permissão VPN ausente"
+            }
+
+            val fd = Builder()
+                .setSession("Reboot DNS - PoC")
+                .setMtu(1500)
+                .addAddress("10.111.0.1", 32)
+                .addDnsServer("10.111.0.2")
+                .addRoute("10.111.0.2", 32)
+                .establish()
+                ?: error("Falha ao estabelecer VPN")
+
+            tunnel = fd
+
+            val input = FileInputStream(fd.fileDescriptor)
+            val output = FileOutputStream(fd.fileDescriptor)
+
+            val relay = DnsRelayDispatcher(
+                forwarder = DnsUpstreamForwarder(this),
+                output = output
+            )
+
+            dispatcher = relay
+            running.set(true)
+
+            Log.i(
+                TAG,
+                "TUN estabelecido; DNS relay concorrente ativo"
+            )
+
+            readerThread = thread(
+                name = "tun-reader",
+                isDaemon = true
+            ) {
+                readTun(input, relay)
+            }
+
+        } catch (ex: Exception) {
+            Log.e(TAG, "VPN não iniciada", ex)
+            shutdown()
+        }
+    }
+
+    private fun readTun(
+        input: FileInputStream,
+        relay: DnsRelayDispatcher
+    ) {
+        val buffer = ByteArray(32767)
+
+        var packets = 0L
+        var udp53 = 0L
+        var other = 0L
+        var malformed = 0L
+
+        var exitReason = "unknown"
+
+        try {
+            while (running.get()) {
+                val count = input.read(buffer)
+
+                if (count == -1) {
+                    exitReason = "eof"
+                    break
+                }
+
+                if (count == 0) continue
+
+                packets++
+
+                when (
+                    DnsPacketClassifier.classify(
+                        buffer,
+                        count
+                    )
+                ) {
+                    PacketKind.DNS_UDP_53 -> {
+                        udp53++
+
+                        val query = DnsQueryExtractor.extract(
+                            buffer,
+                            count
+                        )
+
+                        if (query != null) {
+                            relay.submit(
+                                buffer,
+                                count,
+                                query
+                            )
+                        } else {
+                            Log.w(
+                                TAG,
+                                "dns_query_extraction_failed"
+                            )
+                        }
+                    }
+
+                    PacketKind.OTHER -> other++
+                    PacketKind.MALFORMED -> malformed++
+                }
+
+                Log.i(
+                    TAG,
+                    "tun_stats " +
+                            "packets=$packets " +
+                            "udp53=$udp53 " +
+                            "other=$other " +
+                            "malformed=$malformed"
+                )
+            }
+
+            if (exitReason == "unknown") {
+                exitReason = "stop-requested"
+            }
+
+        } catch (ex: Exception) {
+            exitReason = if (running.get()) {
+                Log.e(TAG, "Erro de leitura TUN", ex)
+                "read-error"
+            } else {
+                "stop-requested"
+            }
+
+        } finally {
+            Log.i(
+                TAG,
+                "Leitor TUN encerrado " +
+                        "reason=$exitReason " +
+                        "packets=$packets " +
+                        "udp53=$udp53 " +
+                        "other=$other " +
+                        "malformed=$malformed"
+            )
+
+            if (running.get()) {
+                Handler(mainLooper).post {
+                    if (running.get()) {
+                        Log.w(
+                            TAG,
+                            "Encerrando VPN após fim do leitor TUN"
+                        )
+                        shutdown()
+                    }
+                }
+            }
+        }
+    }
+
     private fun promoteToForeground() {
-        val manager = getSystemService(NotificationManager::class.java)
-        manager.createNotificationChannel(NotificationChannel(CHANNEL, "VPN de teste", NotificationManager.IMPORTANCE_LOW))
-        val note = Notification.Builder(this, CHANNEL)
+        val manager =
+            getSystemService(NotificationManager::class.java)
+
+        manager.createNotificationChannel(
+            NotificationChannel(
+                CHANNEL,
+                "VPN de teste",
+                NotificationManager.IMPORTANCE_LOW
+            )
+        )
+
+        val notification = Notification.Builder(
+            this,
+            CHANNEL
+        )
             .setContentTitle("Reboot — VPN de laboratório")
-            .setContentText("Sem encaminhamento DNS. Desative após o teste.")
-            .setSmallIcon(android.R.drawable.stat_sys_warning)
+            .setContentText(
+                "Filtragem DNS experimental ativa"
+            )
+            .setSmallIcon(
+                android.R.drawable.stat_sys_warning
+            )
             .setOngoing(true)
             .build()
+
         if (Build.VERSION.SDK_INT >= 34) {
-            startForeground(1001, note, ServiceInfo.FOREGROUND_SERVICE_TYPE_SYSTEM_EXEMPTED)
+            startForeground(
+                1001,
+                notification,
+                ServiceInfo
+                    .FOREGROUND_SERVICE_TYPE_SYSTEM_EXEMPTED
+            )
         } else {
             @Suppress("DEPRECATION")
-            startForeground(1001, note)
+            startForeground(1001, notification)
         }
     }
 
     private fun shutdown() {
         running.set(false)
-        try { tunnel?.close() } catch (_: Exception) {}
+
+        dispatcher?.close()
+        dispatcher = null
+
+        try {
+            tunnel?.close()
+        } catch (_: Exception) {
+        }
+
         tunnel = null
+
         readerThread?.interrupt()
         readerThread = null
+
         stopForeground(STOP_FOREGROUND_REMOVE)
         stopSelf()
     }
 
-    override fun onRevoke() { shutdown(); super.onRevoke() }
-    override fun onDestroy() { shutdown(); super.onDestroy() }
-    override fun onBind(intent: Intent?) = super.onBind(intent)
+    override fun onRevoke() {
+        shutdown()
+        super.onRevoke()
+    }
+
+    override fun onDestroy() {
+        shutdown()
+        super.onDestroy()
+    }
 }
