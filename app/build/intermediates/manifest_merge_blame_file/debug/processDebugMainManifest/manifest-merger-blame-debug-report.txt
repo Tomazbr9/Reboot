@@ -26,53 +26,52 @@
 18        android:extractNativeLibs="false"
 19        android:label="Reboot DNS PoC"
 19-->/home/tomaz/Downloads/reboot-dns-vpn-poc-android/reboot-poc/app/src/main/AndroidManifest.xml:5:46-76
-20        android:testOnly="true"
-21        android:theme="@android:style/Theme.Material.Light.NoActionBar"
-21-->/home/tomaz/Downloads/reboot-dns-vpn-poc-android/reboot-poc/app/src/main/AndroidManifest.xml:5:77-140
-22        android:usesCleartextTraffic="false" >
-22-->/home/tomaz/Downloads/reboot-dns-vpn-poc-android/reboot-poc/app/src/main/AndroidManifest.xml:5:141-177
-23        <activity
-23-->/home/tomaz/Downloads/reboot-dns-vpn-poc-android/reboot-poc/app/src/main/AndroidManifest.xml:6:9-11:20
-24            android:name="br.com.reboot.poc.MainActivity"
-24-->/home/tomaz/Downloads/reboot-dns-vpn-poc-android/reboot-poc/app/src/main/AndroidManifest.xml:6:19-47
-25            android:exported="true" >
-25-->/home/tomaz/Downloads/reboot-dns-vpn-poc-android/reboot-poc/app/src/main/AndroidManifest.xml:6:48-71
-26            <intent-filter>
-26-->/home/tomaz/Downloads/reboot-dns-vpn-poc-android/reboot-poc/app/src/main/AndroidManifest.xml:7:13-10:29
-27                <action android:name="android.intent.action.MAIN" />
-27-->/home/tomaz/Downloads/reboot-dns-vpn-poc-android/reboot-poc/app/src/main/AndroidManifest.xml:8:17-69
-27-->/home/tomaz/Downloads/reboot-dns-vpn-poc-android/reboot-poc/app/src/main/AndroidManifest.xml:8:25-66
-28
-29                <category android:name="android.intent.category.LAUNCHER" />
-29-->/home/tomaz/Downloads/reboot-dns-vpn-poc-android/reboot-poc/app/src/main/AndroidManifest.xml:9:17-77
-29-->/home/tomaz/Downloads/reboot-dns-vpn-poc-android/reboot-poc/app/src/main/AndroidManifest.xml:9:27-74
-30            </intent-filter>
-31        </activity>
-32
-33        <service
-33-->/home/tomaz/Downloads/reboot-dns-vpn-poc-android/reboot-poc/app/src/main/AndroidManifest.xml:12:9-18:19
-34            android:name="br.com.reboot.poc.RebootDnsVpnService"
-34-->/home/tomaz/Downloads/reboot-dns-vpn-poc-android/reboot-poc/app/src/main/AndroidManifest.xml:12:18-53
-35            android:exported="true"
-35-->/home/tomaz/Downloads/reboot-dns-vpn-poc-android/reboot-poc/app/src/main/AndroidManifest.xml:14:13-36
-36            android:foregroundServiceType="systemExempted"
-36-->/home/tomaz/Downloads/reboot-dns-vpn-poc-android/reboot-poc/app/src/main/AndroidManifest.xml:15:13-59
-37            android:permission="android.permission.BIND_VPN_SERVICE" >
-37-->/home/tomaz/Downloads/reboot-dns-vpn-poc-android/reboot-poc/app/src/main/AndroidManifest.xml:13:13-69
-38            <intent-filter>
-38-->/home/tomaz/Downloads/reboot-dns-vpn-poc-android/reboot-poc/app/src/main/AndroidManifest.xml:16:13-92
-39                <action android:name="android.net.VpnService" />
-39-->/home/tomaz/Downloads/reboot-dns-vpn-poc-android/reboot-poc/app/src/main/AndroidManifest.xml:16:28-76
-39-->/home/tomaz/Downloads/reboot-dns-vpn-poc-android/reboot-poc/app/src/main/AndroidManifest.xml:16:36-73
-40            </intent-filter>
-41
-42            <meta-data
-42-->/home/tomaz/Downloads/reboot-dns-vpn-poc-android/reboot-poc/app/src/main/AndroidManifest.xml:17:13-105
-43                android:name="android.net.VpnService.SUPPORTS_ALWAYS_ON"
-43-->/home/tomaz/Downloads/reboot-dns-vpn-poc-android/reboot-poc/app/src/main/AndroidManifest.xml:17:24-80
-44                android:value="false" />
-44-->/home/tomaz/Downloads/reboot-dns-vpn-poc-android/reboot-poc/app/src/main/AndroidManifest.xml:17:81-102
-45        </service>
-46    </application>
-47
-48</manifest>
+20        android:theme="@android:style/Theme.Material.Light.NoActionBar"
+20-->/home/tomaz/Downloads/reboot-dns-vpn-poc-android/reboot-poc/app/src/main/AndroidManifest.xml:5:77-140
+21        android:usesCleartextTraffic="false" >
+21-->/home/tomaz/Downloads/reboot-dns-vpn-poc-android/reboot-poc/app/src/main/AndroidManifest.xml:5:141-177
+22        <activity
+22-->/home/tomaz/Downloads/reboot-dns-vpn-poc-android/reboot-poc/app/src/main/AndroidManifest.xml:6:9-11:20
+23            android:name="br.com.reboot.poc.MainActivity"
+23-->/home/tomaz/Downloads/reboot-dns-vpn-poc-android/reboot-poc/app/src/main/AndroidManifest.xml:6:19-47
+24            android:exported="true" >
+24-->/home/tomaz/Downloads/reboot-dns-vpn-poc-android/reboot-poc/app/src/main/AndroidManifest.xml:6:48-71
+25            <intent-filter>
+25-->/home/tomaz/Downloads/reboot-dns-vpn-poc-android/reboot-poc/app/src/main/AndroidManifest.xml:7:13-10:29
+26                <action android:name="android.intent.action.MAIN" />
+26-->/home/tomaz/Downloads/reboot-dns-vpn-poc-android/reboot-poc/app/src/main/AndroidManifest.xml:8:17-69
+26-->/home/tomaz/Downloads/reboot-dns-vpn-poc-android/reboot-poc/app/src/main/AndroidManifest.xml:8:25-66
+27
+28                <category android:name="android.intent.category.LAUNCHER" />
+28-->/home/tomaz/Downloads/reboot-dns-vpn-poc-android/reboot-poc/app/src/main/AndroidManifest.xml:9:17-77
+28-->/home/tomaz/Downloads/reboot-dns-vpn-poc-android/reboot-poc/app/src/main/AndroidManifest.xml:9:27-74
+29            </intent-filter>
+30        </activity>
+31
+32        <service
+32-->/home/tomaz/Downloads/reboot-dns-vpn-poc-android/reboot-poc/app/src/main/AndroidManifest.xml:12:9-18:19
+33            android:name="br.com.reboot.poc.RebootDnsVpnService"
+33-->/home/tomaz/Downloads/reboot-dns-vpn-poc-android/reboot-poc/app/src/main/AndroidManifest.xml:12:18-53
+34            android:exported="true"
+34-->/home/tomaz/Downloads/reboot-dns-vpn-poc-android/reboot-poc/app/src/main/AndroidManifest.xml:14:13-36
+35            android:foregroundServiceType="systemExempted"
+35-->/home/tomaz/Downloads/reboot-dns-vpn-poc-android/reboot-poc/app/src/main/AndroidManifest.xml:15:13-59
+36            android:permission="android.permission.BIND_VPN_SERVICE" >
+36-->/home/tomaz/Downloads/reboot-dns-vpn-poc-android/reboot-poc/app/src/main/AndroidManifest.xml:13:13-69
+37            <intent-filter>
+37-->/home/tomaz/Downloads/reboot-dns-vpn-poc-android/reboot-poc/app/src/main/AndroidManifest.xml:16:13-92
+38                <action android:name="android.net.VpnService" />
+38-->/home/tomaz/Downloads/reboot-dns-vpn-poc-android/reboot-poc/app/src/main/AndroidManifest.xml:16:28-76
+38-->/home/tomaz/Downloads/reboot-dns-vpn-poc-android/reboot-poc/app/src/main/AndroidManifest.xml:16:36-73
+39            </intent-filter>
+40
+41            <meta-data
+41-->/home/tomaz/Downloads/reboot-dns-vpn-poc-android/reboot-poc/app/src/main/AndroidManifest.xml:17:13-105
+42                android:name="android.net.VpnService.SUPPORTS_ALWAYS_ON"
+42-->/home/tomaz/Downloads/reboot-dns-vpn-poc-android/reboot-poc/app/src/main/AndroidManifest.xml:17:24-80
+43                android:value="false" />
+43-->/home/tomaz/Downloads/reboot-dns-vpn-poc-android/reboot-poc/app/src/main/AndroidManifest.xml:17:81-102
+44        </service>
+45    </application>
+46
+47</manifest>
