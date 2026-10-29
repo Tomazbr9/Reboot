@@ -8,30 +8,99 @@ import android.content.Intent
 import android.content.pm.ServiceInfo
 import android.net.VpnService
 import android.os.Build
+import android.os.Bundle
 import android.os.Handler
 import android.os.Looper
+import android.os.ResultReceiver
+import android.os.SystemClock
+import android.provider.Settings
 import android.util.Log
+import br.com.reboot.poc.application.protection.ProtectionRecoveryCoordinator
+import br.com.reboot.poc.application.protection.ProtectionRecoveryEvaluator
+import br.com.reboot.poc.application.protection.ProtectionRecoveryResult
+import br.com.reboot.poc.application.protection.ProtectionSessionRecorder
+import br.com.reboot.poc.application.protection.VpnOperationalSnapshot
+import br.com.reboot.poc.application.unlock.PersistentUnlockCoordinator
+import br.com.reboot.poc.domain.protection.ProtectionSessionRecord
+import br.com.reboot.poc.domain.unlock.UnlockDelay
+import br.com.reboot.poc.domain.unlock.UnlockRequestState
 import br.com.reboot.poc.infrastructure.dns.DnsPacketClassifier
 import br.com.reboot.poc.infrastructure.dns.DnsQueryExtractor
 import br.com.reboot.poc.infrastructure.dns.DnsRelayDispatcher
 import br.com.reboot.poc.infrastructure.dns.DnsUpstreamForwarder
 import br.com.reboot.poc.infrastructure.dns.PacketKind
+import br.com.reboot.poc.infrastructure.persistence.ProtectionSessionRecordStorage
+import br.com.reboot.poc.infrastructure.persistence.UnlockRequestStorage
 import java.io.FileInputStream
 import java.io.FileOutputStream
 import kotlin.concurrent.thread
-
 class RebootDnsVpnService : VpnService() {
 
     companion object {
         const val ACTION_START = "br.com.reboot.poc.START"
         const val ACTION_STOP = "br.com.reboot.poc.STOP"
 
+        const val ACTION_REQUEST_UNLOCK =
+            "br.com.reboot.poc.REQUEST_UNLOCK"
+
+        const val EXTRA_UNLOCK_DELAY =
+            "br.com.reboot.poc.UNLOCK_DELAY"
+
+        const val ACTION_GET_UNLOCK_STATUS =
+            "br.com.reboot.poc.GET_UNLOCK_STATUS"
+
+        const val ACTION_CANCEL_UNLOCK =
+            "br.com.reboot.poc.CANCEL_UNLOCK"
+
+        const val ACTION_CONFIRM_UNLOCK =
+            "br.com.reboot.poc.CONFIRM_UNLOCK"
+
+        const val EXTRA_REQUEST_ID =
+            "br.com.reboot.poc.REQUEST_ID"
+
+        const val EXTRA_RESULT_RECEIVER =
+            "br.com.reboot.poc.RESULT_RECEIVER"
+
+        const val RESULT_STATUS = 1
+
+        const val KEY_STATE = "state"
+        const val KEY_REMAINING_MILLIS = "remainingMillis"
+        const val KEY_REQUEST_ID = "requestId"
+        const val KEY_MESSAGE = "message"
+
         private const val CHANNEL = "vpn_poc"
         private const val TAG = "RebootDnsPoc"
+
     }
 
     private val sessionGuard = VpnSessionGuard()
     private val mainHandler = Handler(Looper.getMainLooper())
+
+    private val protectionStorage by lazy {
+        ProtectionSessionRecordStorage(this)
+    }
+
+    private val unlockStorage by lazy {
+        UnlockRequestStorage(this)
+    }
+
+    private val sessionRecorder by lazy {
+        ProtectionSessionRecorder(
+            sessions = protectionStorage,
+            unlocks = unlockStorage
+        )
+    }
+
+    private val recoveryCoordinator by lazy {
+        ProtectionRecoveryCoordinator(
+            sessions = protectionStorage,
+            unlocks = unlockStorage
+        )
+    }
+
+    private val snapshotResolver by lazy {
+        VpnOperationalSnapshotResolver(sessionGuard)
+    }
 
     @Volatile
     private var currentSession: VpnSessionResources? = null
@@ -48,18 +117,40 @@ class RebootDnsVpnService : VpnService() {
 
         when (intent?.action) {
             ACTION_START -> startVpn()
-            ACTION_STOP -> {
-                currentSession?.let {
-                    stopSession(it, "user-request", true)
-                } ?: stopSelfResult(startId)
+
+            ACTION_REQUEST_UNLOCK -> {
+                requestUnlock(intent)
             }
+
+            ACTION_GET_UNLOCK_STATUS -> {
+                getUnlockStatus(intent)
+            }
+
+            ACTION_CANCEL_UNLOCK -> {
+                cancelUnlock(intent)
+            }
+
+            ACTION_CONFIRM_UNLOCK -> {
+                confirmUnlock(intent)
+            }
+
+            ACTION_STOP -> {
+                Log.w(
+                    TAG,
+                    "vpn_direct_stop_rejected " +
+                            "reason=unlock_confirmation_required"
+                )
+            }
+
             else -> {
                 Log.w(TAG, "vpn_unknown_command")
-                if (currentSession == null) {
-                    stopSelfResult(startId)
-                }
             }
         }
+
+        if (currentSession == null) {
+            stopSelfResult(startId)
+        }
+
 
         return START_NOT_STICKY
     }
@@ -134,6 +225,23 @@ class RebootDnsVpnService : VpnService() {
             }
 
             reader.start()
+
+            recoverActiveSession(session)
+
+            sessionRecorder.onActivated(
+                ProtectionSessionRecord(
+                    sessionKey = session.sessionKey,
+                    bootCount = currentBootCount(),
+                    activatedAtElapsedMillis =
+                        SystemClock.elapsedRealtime()
+                )
+            )
+
+            Log.i(
+                TAG,
+                "vpn_session_persisted id=$sessionId"
+            )
+
 
             Log.i(
                 TAG,
@@ -330,6 +438,25 @@ class RebootDnsVpnService : VpnService() {
             }
 
         } finally {
+
+            try {
+                val removed = sessionRecorder.onStopped(
+                    session.sessionKey
+                )
+
+                Log.i(
+                    TAG,
+                    "vpn_session_record_cleared " +
+                            "id=$sessionId removed=$removed"
+                )
+            } catch (ex: Exception) {
+                Log.e(
+                    TAG,
+                    "vpn_session_record_cleanup_failed id=$sessionId",
+                    ex
+                )
+            }
+
             // Protege as referências contra callbacks antigos.
             if (currentSession === session) {
                 currentSession = null
@@ -395,6 +522,35 @@ class RebootDnsVpnService : VpnService() {
         }
     }
 
+
+    override fun onCreate() {
+        super.onCreate()
+
+        try {
+            val saved = protectionStorage.load()
+
+            val decision = ProtectionRecoveryEvaluator()
+                .evaluate(
+                    saved = saved,
+                    snapshot = VpnOperationalSnapshot.Unknown,
+                    currentBootCount = currentBootCount()
+                )
+
+            Log.i(
+                TAG,
+                "vpn_recovery_initial_assessment " +
+                        "decision=$decision " +
+                        "hasSavedRecord=${saved != null}"
+            )
+        } catch (ex: Exception) {
+            Log.e(
+                TAG,
+                "vpn_recovery_initial_assessment_failed",
+                ex
+            )
+        }
+    }
+
     override fun onRevoke() {
         // O Android pode chamar onRevoke fora
         // da thread principal.
@@ -424,4 +580,353 @@ class RebootDnsVpnService : VpnService() {
 
         super.onDestroy()
     }
+
+
+    private fun currentBootCount(): Int =
+        Settings.Global.getInt(
+            contentResolver,
+            Settings.Global.BOOT_COUNT
+        )
+
+    private fun recoverActiveSession(
+        session: VpnSessionResources
+    ): ProtectionRecoveryResult {
+
+        check(currentSession === session) {
+            "Stale VPN session cannot recover protection"
+        }
+
+        val snapshot = snapshotResolver.resolve(session)
+
+        check(
+            snapshot is VpnOperationalSnapshot.Active &&
+                    snapshot.sessionKey == session.sessionKey
+        ) {
+            "VPN session is not operationally active"
+        }
+
+        val result = recoveryCoordinator.recover(
+            snapshot = snapshot,
+            currentBootCount = currentBootCount()
+        )
+
+        Log.i(
+            TAG,
+            "vpn_recovery_completed " +
+                    "id=${session.sessionId} " +
+                    "result=$result"
+        )
+
+        return result
+    }
+
+    private val unlockCoordinator by lazy {
+        PersistentUnlockCoordinator(
+            repository = unlockStorage,
+            elapsedRealtimeMillis = {
+                SystemClock.elapsedRealtime()
+            },
+            bootCount = {
+                currentBootCount()
+            }
+        )
+    }
+
+
+    private fun requestUnlock(intent: Intent) {
+        check(Looper.myLooper() == Looper.getMainLooper()) {
+            "Unlock request must run on main thread"
+        }
+
+        val session = currentSession
+
+        // 1. Verifica se existe uma VPN ativa.
+        if (
+            session == null ||
+            session.isStopped() ||
+            !sessionGuard.isActive(session.sessionId)
+        ) {
+            Log.w(
+                TAG,
+                "vpn_unlock_request_rejected reason=no_active_session"
+            )
+
+            reply(
+                intent,
+                state = "INACTIVE",
+                message = "Nenhuma sessão VPN ativa."
+            )
+
+            return
+        }
+
+        // 2. Lê o prazo enviado pela interface.
+        val delayName = intent.getStringExtra(
+            EXTRA_UNLOCK_DELAY
+        )
+
+        val delay = UnlockDelay.entries.firstOrNull {
+            it.name == delayName
+        }
+
+        // 3. Rejeita um prazo inexistente.
+        if (delay == null) {
+            Log.w(
+                TAG,
+                "vpn_unlock_request_rejected reason=invalid_delay"
+            )
+
+            reply(
+                intent,
+                state = "ERROR",
+                message = "Prazo de desbloqueio inválido."
+            )
+
+            return
+        }
+
+        try {
+            // 4. Cria ou recupera o pedido persistido.
+            val status = unlockCoordinator.requestUnlock(
+                protectionSessionKey = session.sessionKey,
+                delay = delay
+            )
+
+            Log.i(
+                TAG,
+                "vpn_unlock_requested " +
+                        "session=${session.sessionKey} " +
+                        "request=${status.requestId} " +
+                        "state=${status.state} " +
+                        "remainingMillis=${status.remainingMillis}"
+            )
+
+            // 5. Devolve o resultado à MainActivity.
+            reply(
+                intent,
+                state = status.state.name,
+                requestId = status.requestId,
+                remainingMillis = status.remainingMillis
+            )
+
+        } catch (ex: Exception) {
+            Log.e(
+                TAG,
+                "vpn_unlock_request_failed",
+                ex
+            )
+
+            reply(
+                intent,
+                state = "ERROR",
+                message = "Não foi possível solicitar o desbloqueio."
+            )
+        }
+    }
+
+    private fun activeUnlockSession(): VpnSessionResources? {
+        val session = currentSession ?: return null
+
+        if (
+            session.isStopped() ||
+            !sessionGuard.isActive(session.sessionId)
+        ) {
+            return null
+        }
+
+        return session
+    }
+
+    @Suppress("DEPRECATION")
+    private fun reply(
+        intent: Intent,
+        state: String,
+        message: String = "",
+        requestId: String? = null,
+        remainingMillis: Long = 0L
+    ) {
+        val receiver = intent.getParcelableExtra<ResultReceiver>(
+            EXTRA_RESULT_RECEIVER
+        ) ?: return
+
+        receiver.send(
+            RESULT_STATUS,
+            Bundle().apply {
+                putString(KEY_STATE, state)
+                putString(KEY_MESSAGE, message)
+                putString(KEY_REQUEST_ID, requestId)
+                putLong(
+                    KEY_REMAINING_MILLIS,
+                    remainingMillis
+                )
+            }
+        )
+    }
+
+    private fun getUnlockStatus(intent: Intent) {
+        val session = activeUnlockSession()
+
+        if (session == null) {
+            reply(
+                intent,
+                state = "INACTIVE",
+                message = "Nenhuma sessão VPN ativa."
+            )
+            return
+        }
+
+        try {
+            val status = unlockCoordinator.getStatus(
+                session.sessionKey
+            )
+
+            if (status == null) {
+                reply(
+                    intent,
+                    state = "PROTECTED",
+                    message = "Proteção ativa."
+                )
+                return
+            }
+
+            reply(
+                intent,
+                state = status.state.name,
+                requestId = status.requestId,
+                remainingMillis = status.remainingMillis
+            )
+        } catch (ex: Exception) {
+            Log.e(TAG, "vpn_unlock_status_failed", ex)
+            reply(
+                intent,
+                state = "ERROR",
+                message = "Não foi possível consultar o pedido."
+            )
+        }
+    }
+
+    private fun cancelUnlock(intent: Intent) {
+        val session = activeUnlockSession()
+
+        if (session == null) {
+            reply(intent, "INACTIVE")
+            return
+        }
+
+        val requestId = intent.getStringExtra(
+            EXTRA_REQUEST_ID
+        )
+
+        if (requestId.isNullOrBlank()) {
+            reply(intent, "ERROR", "Pedido inválido.")
+            return
+        }
+
+        try {
+            val cancelled = unlockCoordinator.cancel(
+                protectionSessionKey = session.sessionKey,
+                requestId = requestId
+            )
+
+            if (cancelled) {
+                Log.i(TAG, "vpn_unlock_cancelled")
+                reply(
+                    intent,
+                    state = "PROTECTED",
+                    message = "Solicitação cancelada."
+                )
+            } else {
+                reply(
+                    intent,
+                    state = "ERROR",
+                    message = "Solicitação não encontrada."
+                )
+            }
+        } catch (ex: Exception) {
+            Log.e(TAG, "vpn_unlock_cancel_failed", ex)
+            reply(intent, "ERROR", "Falha ao cancelar.")
+        }
+    }
+
+    private fun confirmUnlock(intent: Intent) {
+        val session = activeUnlockSession()
+
+        if (session == null) {
+            reply(intent, "INACTIVE")
+            return
+        }
+
+        val requestId = intent.getStringExtra(
+            EXTRA_REQUEST_ID
+        )
+
+        if (requestId.isNullOrBlank()) {
+            reply(intent, "ERROR", "Pedido inválido.")
+            return
+        }
+
+        try {
+            // Uma consulta antiga da interface não
+            // autoriza a parada. Validamos novamente.
+            val status = unlockCoordinator.getStatus(
+                session.sessionKey
+            )
+
+            val authorized =
+                status != null &&
+                        status.requestId == requestId &&
+                        status.state == UnlockRequestState.READY &&
+                        unlockCoordinator.canConfirm(
+                            protectionSessionKey = session.sessionKey,
+                            requestId = requestId
+                        ) &&
+                        currentSession === session &&
+                        sessionGuard.isActive(session.sessionId) &&
+                        !session.isStopped()
+
+            if (!authorized) {
+                Log.w(
+                    TAG,
+                    "vpn_unlock_confirmation_rejected"
+                )
+
+                getUnlockStatus(intent)
+                return
+            }
+
+            Log.i(
+                TAG,
+                "vpn_unlock_confirmation_accepted " +
+                        "session=${session.sessionKey}"
+            )
+
+            // Não existe temporizador chamando este método:
+            // somente um comando explícito de confirmação.
+            stopSession(
+                session = session,
+                reason = "unlock-confirmed",
+                requestStop = true
+            )
+
+            reply(
+                intent,
+                state = "INACTIVE",
+                message = "Desativação confirmada."
+            )
+        } catch (ex: Exception) {
+            Log.e(
+                TAG,
+                "vpn_unlock_confirmation_failed",
+                ex
+            )
+
+            reply(
+                intent,
+                state = "ERROR",
+                message = "Não foi possível confirmar a desativação."
+            )
+        }
+    }
+
+
 }

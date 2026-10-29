@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite name="br.com.reboot.poc.ProtectionRecoveryEvaluatorTest" tests="7" skipped="0" failures="0" errors="0" timestamp="2026-10-29T02:49:37.929Z" hostname="tomaz-IdeaPad-3-15ITL6" time="0.01">
+  <properties/>
+  <testcase name="matchingActiveSessionIsRecognized" classname="br.com.reboot.poc.ProtectionRecoveryEvaluatorTest" time="0.003"/>
+  <testcase name="unknownStatePreservesUncertainty" classname="br.com.reboot.poc.ProtectionRecoveryEvaluatorTest" time="0.001"/>
+  <testcase name="noSavedSessionReturnsNoRecord" classname="br.com.reboot.poc.ProtectionRecoveryEvaluatorTest" time="0.001"/>
+  <testcase name="previousBootIsRecognizedAfterVerification" classname="br.com.reboot.poc.ProtectionRecoveryEvaluatorTest" time="0.001"/>
+  <testcase name="differentActiveSessionIsRecognized" classname="br.com.reboot.poc.ProtectionRecoveryEvaluatorTest" time="0.001"/>
+  <testcase name="confirmedInactiveSessionIsRecognized" classname="br.com.reboot.poc.ProtectionRecoveryEvaluatorTest" time="0.001"/>
+  <testcase name="unknownStateDoesNotAssumeRebootRecovery" classname="br.com.reboot.poc.ProtectionRecoveryEvaluatorTest" time="0.001"/>
+  <system-out><![CDATA[]]></system-out>
+  <system-err><![CDATA[]]></system-err>
+</testsuite>

@@ -1,10 +1,10 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<testsuite name="br.com.reboot.poc.VpnResourceScopeTest" tests="4" skipped="0" failures="0" errors="0" timestamp="2026-10-28T02:58:49.822Z" hostname="tomaz-IdeaPad-3-15ITL6" time="0.005">
+<testsuite name="br.com.reboot.poc.VpnResourceScopeTest" tests="4" skipped="0" failures="0" errors="0" timestamp="2026-10-29T02:49:38.040Z" hostname="tomaz-IdeaPad-3-15ITL6" time="0.01">
   <properties/>
-  <testcase name="closesResourcesInReverseOrder" classname="br.com.reboot.poc.VpnResourceScopeTest" time="0.003"/>
-  <testcase name="rejectsRegistrationAfterClose" classname="br.com.reboot.poc.VpnResourceScopeTest" time="0.0"/>
+  <testcase name="closesResourcesInReverseOrder" classname="br.com.reboot.poc.VpnResourceScopeTest" time="0.004"/>
+  <testcase name="rejectsRegistrationAfterClose" classname="br.com.reboot.poc.VpnResourceScopeTest" time="0.002"/>
   <testcase name="closeIsIdempotent" classname="br.com.reboot.poc.VpnResourceScopeTest" time="0.001"/>
-  <testcase name="closesAllResourcesEvenWhenOneFails" classname="br.com.reboot.poc.VpnResourceScopeTest" time="0.001"/>
+  <testcase name="closesAllResourcesEvenWhenOneFails" classname="br.com.reboot.poc.VpnResourceScopeTest" time="0.002"/>
   <system-out><![CDATA[]]></system-out>
   <system-err><![CDATA[]]></system-err>
 </testsuite>

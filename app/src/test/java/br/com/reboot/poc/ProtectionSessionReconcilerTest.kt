@@ -1,9 +1,11 @@
+
 package br.com.reboot.poc
 
 import br.com.reboot.poc.application.ports.PersistentUnlockRepository
 import br.com.reboot.poc.application.ports.ProtectionSessionRecordRepository
 import br.com.reboot.poc.application.protection.ProtectionSessionReconciler
 import br.com.reboot.poc.application.protection.SessionReconciliationResult
+import br.com.reboot.poc.application.protection.VpnOperationalSnapshot
 import br.com.reboot.poc.domain.protection.ProtectionSessionRecord
 import br.com.reboot.poc.domain.unlock.StoredUnlockRequest
 import br.com.reboot.poc.domain.unlock.UnlockDelay
@@ -22,7 +24,9 @@ class ProtectionSessionReconcilerTest {
             this.record = record
         }
 
-        override fun load() = record
+        override fun load(): ProtectionSessionRecord? {
+            return record
+        }
 
         override fun clear() {
             record = null
@@ -38,7 +42,9 @@ class ProtectionSessionReconcilerTest {
             this.request = request
         }
 
-        override fun load() = request
+        override fun load(): StoredUnlockRequest? {
+            return request
+        }
 
         override fun clear() {
             request = null
@@ -53,8 +59,8 @@ class ProtectionSessionReconcilerTest {
 
     private fun reconciler() =
         ProtectionSessionReconciler(
-            sessions,
-            unlocks
+            sessions = sessions,
+            unlocks = unlocks
         )
 
     private fun storeSession() {
@@ -67,7 +73,9 @@ class ProtectionSessionReconcilerTest {
         )
     }
 
-    private fun storeUnlock(key: String = sessionA) {
+    private fun storeUnlock(
+        key: String = sessionA
+    ) {
         unlocks.save(
             StoredUnlockRequest.create(
                 protectionSessionKey = key,
@@ -83,10 +91,14 @@ class ProtectionSessionReconcilerTest {
         storeSession()
         storeUnlock()
 
+        val result = reconciler().reconcile(
+            VpnOperationalSnapshot.Active(sessionA),
+            currentBootCount = 3
+        )
+
         assertEquals(
-            SessionReconciliationResult
-                .MATCHED_ACTIVE_SESSION,
-            reconciler().reconcile(sessionA, 3)
+            SessionReconciliationResult.MATCHED_ACTIVE_SESSION,
+            result
         )
 
         assertNotNull(sessions.load())
@@ -98,10 +110,14 @@ class ProtectionSessionReconcilerTest {
         storeSession()
         storeUnlock()
 
+        val result = reconciler().reconcile(
+            VpnOperationalSnapshot.Active(sessionB),
+            currentBootCount = 3
+        )
+
         assertEquals(
-            SessionReconciliationResult
-                .STALE_RECORD_CLEARED,
-            reconciler().reconcile(sessionB, 3)
+            SessionReconciliationResult.STALE_RECORD_CLEARED,
+            result
         )
 
         assertNull(sessions.load())
@@ -113,7 +129,15 @@ class ProtectionSessionReconcilerTest {
         storeSession()
         storeUnlock()
 
-        reconciler().reconcile(null, 3)
+        val result = reconciler().reconcile(
+            VpnOperationalSnapshot.Inactive,
+            currentBootCount = 3
+        )
+
+        assertEquals(
+            SessionReconciliationResult.STALE_RECORD_CLEARED,
+            result
+        )
 
         assertNull(sessions.load())
         assertNull(unlocks.load())
@@ -124,7 +148,15 @@ class ProtectionSessionReconcilerTest {
         storeSession()
         storeUnlock()
 
-        reconciler().reconcile(sessionA, 4)
+        val result = reconciler().reconcile(
+            VpnOperationalSnapshot.Active(sessionA),
+            currentBootCount = 4
+        )
+
+        assertEquals(
+            SessionReconciliationResult.STALE_RECORD_CLEARED,
+            result
+        )
 
         assertNull(sessions.load())
         assertNull(unlocks.load())
@@ -135,17 +167,75 @@ class ProtectionSessionReconcilerTest {
         storeSession()
         storeUnlock(sessionB)
 
-        reconciler().reconcile(null, 3)
+        val result = reconciler().reconcile(
+            VpnOperationalSnapshot.Inactive,
+            currentBootCount = 3
+        )
+
+        assertEquals(
+            SessionReconciliationResult.STALE_RECORD_CLEARED,
+            result
+        )
 
         assertNull(sessions.load())
         assertNotNull(unlocks.load())
+
+        assertEquals(
+            sessionB,
+            unlocks.load()?.protectionSessionKey
+        )
     }
 
     @Test
     fun returnsNoRecordWhenStorageIsEmpty() {
+        val result = reconciler().reconcile(
+            VpnOperationalSnapshot.Active(sessionA),
+            currentBootCount = 3
+        )
+
         assertEquals(
             SessionReconciliationResult.NO_RECORD,
-            reconciler().reconcile(sessionA, 3)
+            result
         )
+
+        assertNull(sessions.load())
+    }
+
+    @Test
+    fun unknownVpnStatePreservesRecords() {
+        storeSession()
+        storeUnlock()
+
+        val result = reconciler().reconcile(
+            VpnOperationalSnapshot.Unknown,
+            currentBootCount = 3
+        )
+
+        assertEquals(
+            SessionReconciliationResult.WAITING_FOR_VERIFICATION,
+            result
+        )
+
+        assertNotNull(sessions.load())
+        assertNotNull(unlocks.load())
+    }
+
+    @Test
+    fun unknownStateAfterBootChangeDoesNotClearRecords() {
+        storeSession()
+        storeUnlock()
+
+        val result = reconciler().reconcile(
+            VpnOperationalSnapshot.Unknown,
+            currentBootCount = 4
+        )
+
+        assertEquals(
+            SessionReconciliationResult.WAITING_FOR_VERIFICATION,
+            result
+        )
+
+        assertNotNull(sessions.load())
+        assertNotNull(unlocks.load())
     }
 }

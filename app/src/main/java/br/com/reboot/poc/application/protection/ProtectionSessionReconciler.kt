@@ -5,28 +5,19 @@ import br.com.reboot.poc.application.ports.ProtectionSessionRecordRepository
 
 enum class SessionReconciliationResult {
     NO_RECORD,
+    WAITING_FOR_VERIFICATION,
     MATCHED_ACTIVE_SESSION,
     STALE_RECORD_CLEARED
 }
 
 class ProtectionSessionReconciler(
-    private val sessions:
-    ProtectionSessionRecordRepository,
-    private val unlocks:
-    PersistentUnlockRepository
+    private val sessions: ProtectionSessionRecordRepository,
+    private val unlocks: PersistentUnlockRepository
 ) {
 
-    /**
-     * liveSessionKey só pode ser fornecida após
-     * verificar que o serviço VPN está ACTIVE.
-     *
-     * null significa que não há uma sessão ativa
-     * confirmada, não que a VPN foi desligada
-     * apenas porque a Activity não a encontrou.
-     */
     @Synchronized
     fun reconcile(
-        liveSessionKey: String?,
+        snapshot: VpnOperationalSnapshot,
         currentBootCount: Int
     ): SessionReconciliationResult {
         require(currentBootCount >= 0)
@@ -34,25 +25,34 @@ class ProtectionSessionReconciler(
         val saved = sessions.load()
             ?: return SessionReconciliationResult.NO_RECORD
 
-        val matches =
-            saved.bootCount == currentBootCount &&
-                    saved.sessionKey == liveSessionKey
+        // Nunca remover dados enquanto o estado real
+        // da VPN não foi confirmado.
+        if (snapshot is VpnOperationalSnapshot.Unknown) {
+            return SessionReconciliationResult
+                .WAITING_FOR_VERIFICATION
+        }
+
+        val matches = when (snapshot) {
+            is VpnOperationalSnapshot.Active ->
+                saved.sessionKey == snapshot.sessionKey &&
+                        saved.bootCount == currentBootCount
+
+            VpnOperationalSnapshot.Inactive -> false
+
+            VpnOperationalSnapshot.Unknown -> false
+        }
 
         if (matches) {
             return SessionReconciliationResult
                 .MATCHED_ACTIVE_SESSION
         }
 
-        // O registro antigo não corresponde à
-        // sessão operacional confirmada.
-        //
-        // Invalide apenas o pedido associado
-        // a essa sessão antiga.
+        // Só limpar o desbloqueio se pertencer
+        // à sessão que se tornou obsoleta.
         val unlock = unlocks.load()
 
         if (
-            unlock != null &&
-            unlock.protectionSessionKey ==
+            unlock?.protectionSessionKey ==
             saved.sessionKey
         ) {
             unlocks.clear()
