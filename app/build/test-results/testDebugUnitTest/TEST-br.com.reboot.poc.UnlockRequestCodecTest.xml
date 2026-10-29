@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<testsuite name="br.com.reboot.poc.UnlockRequestCodecTest" tests="6" skipped="0" failures="0" errors="0" timestamp="2026-10-28T02:51:38.508Z" hostname="tomaz-IdeaPad-3-15ITL6" time="0.006">
+<testsuite name="br.com.reboot.poc.UnlockRequestCodecTest" tests="6" skipped="0" failures="0" errors="0" timestamp="2026-10-28T02:58:49.807Z" hostname="tomaz-IdeaPad-3-15ITL6" time="0.007">
   <properties/>
   <testcase name="rejectsInvalidStoredIdentity" classname="br.com.reboot.poc.UnlockRequestCodecTest" time="0.005"/>
   <testcase name="rejectsInvalidDuration" classname="br.com.reboot.poc.UnlockRequestCodecTest" time="0.0"/>
