@@ -1,4 +1,4 @@
-#Wed Oct 28 23:51:56 GMT-03:00 2026
+#Wed Oct 28 23:58:42 GMT-03:00 2026
 base.0=/home/tomaz/Downloads/reboot-dns-vpn-poc-android/reboot-poc/app/build/intermediates/dex/debug/mergeExtDexDebug/classes.dex
 base.1=/home/tomaz/Downloads/reboot-dns-vpn-poc-android/reboot-poc/app/build/intermediates/dex/debug/mergeProjectDexDebug/0/classes.dex
 base.2=/home/tomaz/Downloads/reboot-dns-vpn-poc-android/reboot-poc/app/build/intermediates/dex/debug/mergeProjectDexDebug/12/classes.dex

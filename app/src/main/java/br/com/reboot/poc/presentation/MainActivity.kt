@@ -66,15 +66,17 @@ class MainActivity : Activity() {
             renderState(state, id, remaining, message)
         }
     }
-
     private val statusPoll = object : Runnable {
         override fun run() {
+
             if (
+                currentState == "UNKNOWN" ||
                 currentState == "WAITING" ||
                 currentState == "READY"
             ) {
-                sendCommand(Vpn.ACTION_GET_UNLOCK_STATUS)
-                handler.postDelayed(this, 1000L)
+                sendCommand(
+                    Vpn.ACTION_GET_UNLOCK_STATUS
+                )
             }
         }
     }
@@ -177,6 +179,14 @@ class MainActivity : Activity() {
 
     override fun onResume() {
         super.onResume()
+
+        renderState(
+            state = "UNKNOWN",
+            id = null,
+            remaining = 0L,
+            message = ""
+        )
+
         sendCommand(Vpn.ACTION_GET_UNLOCK_STATUS)
     }
 
@@ -219,7 +229,11 @@ class MainActivity : Activity() {
 
         confirmButton.isEnabled = state == "READY"
 
-        if (state == "WAITING" || state == "READY") {
+        if (
+            state == "UNKNOWN" ||
+            state == "WAITING" ||
+            state == "READY"
+        ) {
             handler.postDelayed(statusPoll, 1000L)
         }
     }
