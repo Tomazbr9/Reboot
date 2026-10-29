@@ -1,5 +1,8 @@
 package br.com.reboot.poc
 
+import br.com.reboot.poc.domain.unlock.StoredUnlockRequest
+import br.com.reboot.poc.domain.unlock.UnlockDelay
+import br.com.reboot.poc.infrastructure.persistence.UnlockRequestCodec
 import org.junit.Assert.*
 import org.junit.Test
 import java.util.UUID

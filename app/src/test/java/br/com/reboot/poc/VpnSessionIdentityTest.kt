@@ -1,5 +1,7 @@
 package br.com.reboot.poc
 
+import br.com.reboot.poc.domain.protection.VpnSessionIdentity
+import br.com.reboot.poc.infrastructure.vpn.VpnSessionResources
 import org.junit.Assert.*
 import org.junit.Test
 

@@ -1,5 +1,6 @@
 package br.com.reboot.poc
 
+import br.com.reboot.poc.infrastructure.dns.DnsSocketRegistry
 import org.junit.Assert.*
 import org.junit.Test
 import java.net.DatagramSocket

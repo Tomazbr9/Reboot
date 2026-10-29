@@ -1,5 +1,6 @@
 package br.com.reboot.poc
 
+import br.com.reboot.poc.infrastructure.vpn.VpnSessionResources
 import org.junit.Assert.*
 import org.junit.Test
 import java.util.concurrent.CountDownLatch

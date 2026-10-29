@@ -1,6 +1,7 @@
 
 package br.com.reboot.poc
 
+import br.com.reboot.poc.infrastructure.vpn.VpnResourceScope
 import org.junit.Assert.*
 import org.junit.Test
 

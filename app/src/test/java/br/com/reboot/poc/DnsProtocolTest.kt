@@ -1,5 +1,9 @@
 package br.com.reboot.poc
 
+import br.com.reboot.poc.infrastructure.dns.DnsPacketClassifier
+import br.com.reboot.poc.infrastructure.dns.DnsQueryExtractor
+import br.com.reboot.poc.infrastructure.dns.DnsResponsePacketBuilder
+import br.com.reboot.poc.infrastructure.dns.PacketKind
 import org.junit.Assert.*
 import org.junit.Test
 

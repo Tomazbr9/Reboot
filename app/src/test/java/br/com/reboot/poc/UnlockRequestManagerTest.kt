@@ -1,5 +1,8 @@
 package br.com.reboot.poc
 
+import br.com.reboot.poc.domain.unlock.UnlockDelay
+import br.com.reboot.poc.domain.unlock.UnlockRequestManager
+import br.com.reboot.poc.domain.unlock.UnlockRequestState
 import org.junit.Assert.*
 import org.junit.Test
 

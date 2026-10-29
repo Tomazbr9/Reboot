@@ -1,5 +1,12 @@
 package br.com.reboot.poc
 
+import br.com.reboot.poc.application.ports.PersistentUnlockRepository
+import br.com.reboot.poc.application.ports.ProtectionSessionRecordRepository
+import br.com.reboot.poc.application.protection.ProtectionSessionReconciler
+import br.com.reboot.poc.application.protection.SessionReconciliationResult
+import br.com.reboot.poc.domain.protection.ProtectionSessionRecord
+import br.com.reboot.poc.domain.unlock.StoredUnlockRequest
+import br.com.reboot.poc.domain.unlock.UnlockDelay
 import org.junit.Assert.*
 import org.junit.Test
 import java.util.UUID
