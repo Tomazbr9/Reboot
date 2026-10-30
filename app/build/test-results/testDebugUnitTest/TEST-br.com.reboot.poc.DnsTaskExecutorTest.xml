@@ -1,12 +1,11 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<testsuite name="br.com.reboot.poc.DnsTaskExecutorTest" tests="5" skipped="0" failures="0" errors="0" timestamp="2026-10-29T02:58:26.966Z" hostname="tomaz-IdeaPad-3-15ITL6" time="0.026">
+<testsuite name="br.com.reboot.poc.DnsTaskExecutorTest" tests="5" skipped="0" failures="0" errors="0" timestamp="2026-10-30T02:34:50.386Z" hostname="tomaz-IdeaPad-3-15ITL6" time="0.01">
   <properties/>
-  <testcase name="rejectsWhenQueueIsFull" classname="br.com.reboot.poc.DnsTaskExecutorTest" time="0.009"/>
-  <testcase name="discardsQueuedTaskOnClose" classname="br.com.reboot.poc.DnsTaskExecutorTest" time="0.004"/>
-  <testcase name="rejectsNewTasksAfterClose" classname="br.com.reboot.poc.DnsTaskExecutorTest" time="0.002"/>
-  <testcase name="executesSubmittedTask" classname="br.com.reboot.poc.DnsTaskExecutorTest" time="0.002"/>
-  <testcase name="runsTwoWorkersConcurrently" classname="br.com.reboot.poc.DnsTaskExecutorTest" time="0.009"/>
+  <testcase name="rejectsWhenQueueIsFull" classname="br.com.reboot.poc.DnsTaskExecutorTest" time="0.004"/>
+  <testcase name="discardsQueuedTaskOnClose" classname="br.com.reboot.poc.DnsTaskExecutorTest" time="0.001"/>
+  <testcase name="rejectsNewTasksAfterClose" classname="br.com.reboot.poc.DnsTaskExecutorTest" time="0.0"/>
+  <testcase name="executesSubmittedTask" classname="br.com.reboot.poc.DnsTaskExecutorTest" time="0.001"/>
+  <testcase name="runsTwoWorkersConcurrently" classname="br.com.reboot.poc.DnsTaskExecutorTest" time="0.003"/>
   <system-out><![CDATA[]]></system-out>
-  <system-err><![CDATA[Exception in thread "dns-relay-worker" java.lang.InterruptedException
-]]></system-err>
+  <system-err><![CDATA[]]></system-err>
 </testsuite>

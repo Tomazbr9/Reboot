@@ -1,13 +1,13 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<testsuite name="br.com.reboot.poc.UnlockRequestManagerTest" tests="8" skipped="0" failures="0" errors="0" timestamp="2026-10-29T02:58:27.187Z" hostname="tomaz-IdeaPad-3-15ITL6" time="0.008">
+<testsuite name="br.com.reboot.poc.UnlockRequestManagerTest" tests="8" skipped="0" failures="0" errors="0" timestamp="2026-10-30T02:34:50.488Z" hostname="tomaz-IdeaPad-3-15ITL6" time="0.004">
   <properties/>
-  <testcase name="oldSessionCannotConfirmNewRequest" classname="br.com.reboot.poc.UnlockRequestManagerTest" time="0.004"/>
+  <testcase name="oldSessionCannotConfirmNewRequest" classname="br.com.reboot.poc.UnlockRequestManagerTest" time="0.003"/>
   <testcase name="duplicateRequestDoesNotResetDeadline" classname="br.com.reboot.poc.UnlockRequestManagerTest" time="0.0"/>
-  <testcase name="confirmationBeforeDeadlineIsRejected" classname="br.com.reboot.poc.UnlockRequestManagerTest" time="0.001"/>
+  <testcase name="confirmationBeforeDeadlineIsRejected" classname="br.com.reboot.poc.UnlockRequestManagerTest" time="0.0"/>
   <testcase name="confirmationAfterDeadlineSucceeds" classname="br.com.reboot.poc.UnlockRequestManagerTest" time="0.0"/>
-  <testcase name="requestStartsWaiting" classname="br.com.reboot.poc.UnlockRequestManagerTest" time="0.0"/>
+  <testcase name="requestStartsWaiting" classname="br.com.reboot.poc.UnlockRequestManagerTest" time="0.001"/>
   <testcase name="cannotCancelConfirmedRequest" classname="br.com.reboot.poc.UnlockRequestManagerTest" time="0.0"/>
-  <testcase name="requestBecomesReadyAfterDelay" classname="br.com.reboot.poc.UnlockRequestManagerTest" time="0.001"/>
+  <testcase name="requestBecomesReadyAfterDelay" classname="br.com.reboot.poc.UnlockRequestManagerTest" time="0.0"/>
   <testcase name="cancellationRequiresNewWaitingPeriod" classname="br.com.reboot.poc.UnlockRequestManagerTest" time="0.0"/>
   <system-out><![CDATA[]]></system-out>
   <system-err><![CDATA[]]></system-err>

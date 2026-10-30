@@ -1,0 +1,28 @@
+{
+    "logs": [
+        {
+            "outputFile": "br.com.reboot.poc.app-mergeDebugResources-4:/values-v28/values-v28.xml",
+            "map": [
+                {
+                    "source": "/home/tomaz/.gradle/caches/9.6.0/transforms/60623d0b1f15cea5ff375132604fc4db/transformed/core-1.7.0/res/values-v28/values.xml",
+                    "from": {
+                        "startLines": "4,13",
+                        "startColumns": "0,0",
+                        "startOffsets": "146,625",
+                        "endLines": "12,21",
+                        "endColumns": "8,8",
+                        "endOffsets": "624,1101"
+                    },
+                    "to": {
+                        "startLines": "2,11",
+                        "startColumns": "4,4",
+                        "startOffsets": "55,538",
+                        "endLines": "10,19",
+                        "endColumns": "8,8",
+                        "endOffsets": "533,1014"
+                    }
+                }
+            ]
+        }
+    ]
+}

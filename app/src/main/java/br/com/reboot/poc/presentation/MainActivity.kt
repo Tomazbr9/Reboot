@@ -26,6 +26,7 @@ class MainActivity : Activity() {
     private lateinit var confirmButton: Button
     private lateinit var delaySelector: Spinner
 
+    private val responseTracker = UiResponseTracker()
     private val handler = Handler(Looper.getMainLooper())
     private val vpnRequestCode = 42
 
@@ -39,33 +40,53 @@ class MainActivity : Activity() {
         UnlockDelay.HOURS_4
     )
 
-    private val resultReceiver = object : ResultReceiver(handler) {
-        override fun onReceiveResult(
-            resultCode: Int,
-            resultData: Bundle?
-        ) {
-            if (resultCode != Vpn.RESULT_STATUS) return
+    private fun createResultReceiver(
+        commandId: Long
+    ): ResultReceiver {
 
-            val state = resultData?.getString(
-                Vpn.KEY_STATE
-            ) ?: "ERROR"
+        return object : ResultReceiver(handler) {
 
-            val id = resultData?.getString(
-                Vpn.KEY_REQUEST_ID
-            )
+            override fun onReceiveResult(
+                resultCode: Int,
+                resultData: Bundle?
+            ) {
+                if (resultCode != Vpn.RESULT_STATUS) {
+                    return
+                }
 
-            val remaining = resultData?.getLong(
-                Vpn.KEY_REMAINING_MILLIS,
-                0L
-            ) ?: 0L
+                // Ignora uma resposta que chegou depois
+                // de outro comando mais recente.
+                if (!responseTracker.shouldAccept(commandId)) {
+                    return
+                }
 
-            val message = resultData?.getString(
-                Vpn.KEY_MESSAGE
-            ).orEmpty()
+                val state = resultData?.getString(
+                    Vpn.KEY_STATE
+                ) ?: "ERROR"
 
-            renderState(state, id, remaining, message)
+                val id = resultData?.getString(
+                    Vpn.KEY_REQUEST_ID
+                )
+
+                val remaining = resultData?.getLong(
+                    Vpn.KEY_REMAINING_MILLIS,
+                    0L
+                ) ?: 0L
+
+                val message = resultData?.getString(
+                    Vpn.KEY_MESSAGE
+                ).orEmpty()
+
+                renderState(
+                    state = state,
+                    id = id,
+                    remaining = remaining,
+                    message = message
+                )
+            }
         }
     }
+
     private val statusPoll = object : Runnable {
         override fun run() {
 
@@ -258,12 +279,15 @@ class MainActivity : Activity() {
         selectedDelay: UnlockDelay? = null,
         id: String? = null
     ) {
+
+        val commandId = responseTracker.issue()
+
         val intent = Intent(this, Vpn::class.java).apply {
             this.action = action
 
             putExtra(
                 Vpn.EXTRA_RESULT_RECEIVER,
-                resultReceiver
+                createResultReceiver(commandId)
             )
 
             selectedDelay?.let {

@@ -34,6 +34,11 @@ import br.com.reboot.poc.infrastructure.persistence.UnlockRequestStorage
 import java.io.FileInputStream
 import java.io.FileOutputStream
 import kotlin.concurrent.thread
+import br.com.reboot.poc.application.unlock.UnlockStopAuthorization
+import br.com.reboot.poc.application.unlock.UnlockStopDecision
+import br.com.reboot.poc.domain.protection.PendingStopCleanup
+import br.com.reboot.poc.infrastructure.persistence.PendingStopCleanupStorage
+import br.com.reboot.poc.application.protection.ProtectionStopCleanupResult
 class RebootDnsVpnService : VpnService() {
 
     companion object {
@@ -82,6 +87,10 @@ class RebootDnsVpnService : VpnService() {
 
     private val unlockStorage by lazy {
         UnlockRequestStorage(this)
+    }
+
+    private val pendingStopStorage by lazy {
+        PendingStopCleanupStorage(this)
     }
 
     private val sessionRecorder by lazy {
@@ -387,12 +396,13 @@ class RebootDnsVpnService : VpnService() {
         }
     }
 
+
     private fun stopSession(
         session: VpnSessionResources,
         reason: String,
         requestStop: Boolean
-    ) {
-        // Toda chamada deve ocorrer na thread principal.
+    ): VpnStopResult {
+
         check(Looper.myLooper() == Looper.getMainLooper()) {
             "stopSession must run on main thread"
         }
@@ -402,7 +412,7 @@ class RebootDnsVpnService : VpnService() {
                 TAG,
                 "vpn_stale_stop_ignored id=${session.sessionId}"
             )
-            return
+            return VpnStopResult.STALE_SESSION
         }
 
         val sessionId = session.sessionId
@@ -412,43 +422,83 @@ class RebootDnsVpnService : VpnService() {
                 TAG,
                 "vpn_stop_state_mismatch id=$sessionId"
             )
-            return
+            return VpnStopResult.INVALID_STATE
         }
 
         Log.i(
             TAG,
-            "vpn_session_stopping " +
-                    "id=$sessionId reason=$reason"
+            "vpn_session_stopping id=$sessionId reason=$reason"
         )
 
+        var markerSaved = false
+        var resourceCleanupSucceeded = false
+        var persistenceCleanupSucceeded = false
+        var foregroundCleanupSucceeded = false
+
+        // 1. Registrar a limpeza pendente ANTES
+        // de fechar os recursos.
         try {
+            pendingStopStorage.save(
+                PendingStopCleanup(
+                    sessionKey = session.sessionKey
+                )
+            )
+
+            markerSaved = true
+
+            Log.i(
+                TAG,
+                "vpn_stop_cleanup_marker_saved id=$sessionId"
+            )
+        } catch (ex: Exception) {
+            Log.e(
+                TAG,
+                "vpn_stop_cleanup_marker_save_failed id=$sessionId",
+                ex
+            )
+        }
+
+        // 2. Fechar os recursos.
+        // O fechamento é necessário mesmo quando
+        // não conseguimos persistir o marcador.
+        try {
+            session.close()
+
+            resourceCleanupSucceeded = true
+
+            Log.i(
+                TAG,
+                "vpn_resources_closed id=$sessionId"
+            )
+        } catch (ex: Exception) {
+            Log.e(
+                TAG,
+                "vpn_resource_cleanup_failed id=$sessionId",
+                ex
+            )
+        }
+
+        // 3. Só limpar os registros se o fechamento
+        // dos recursos não apresentou erros.
+        if (resourceCleanupSucceeded) {
             try {
-                session.close()
+                val cleanupResult =
+                    sessionRecorder.onStoppedDetailed(
+                        session.sessionKey
+                    )
+
+                persistenceCleanupSucceeded =
+                    cleanupResult ==
+                            ProtectionStopCleanupResult.CLEANED ||
+                            cleanupResult ==
+                            ProtectionStopCleanupResult.ALREADY_CLEAN
 
                 Log.i(
                     TAG,
-                    "vpn_resources_closed id=$sessionId"
-                )
-            } catch (ex: Exception) {
-                Log.e(
-                    TAG,
-                    "vpn_resource_cleanup_failed id=$sessionId",
-                    ex
-                )
-            }
-
-        } finally {
-
-            try {
-                val removed = sessionRecorder.onStopped(
-                    session.sessionKey
+                    "vpn_session_persistence_cleanup " +
+                            "id=$sessionId result=$cleanupResult"
                 )
 
-                Log.i(
-                    TAG,
-                    "vpn_session_record_cleared " +
-                            "id=$sessionId removed=$removed"
-                )
             } catch (ex: Exception) {
                 Log.e(
                     TAG,
@@ -456,36 +506,86 @@ class RebootDnsVpnService : VpnService() {
                     ex
                 )
             }
+        } else {
+            Log.w(
+                TAG,
+                "vpn_persistence_cleanup_deferred " +
+                        "id=$sessionId reason=resource_close_failed"
+            )
+        }
 
-            // Protege as referências contra callbacks antigos.
-            if (currentSession === session) {
-                currentSession = null
-            }
-
-            sessionGuard.finishStop(sessionId)
-
+        // 4. Remover o marcador por último.
+        //
+        // Se a limpeza falhou, preservamos o marcador.
+        // Se sua gravação falhou, o resultado geral
+        // não poderá ser considerado plenamente bem-sucedido.
+        if (resourceCleanupSucceeded &&
+            persistenceCleanupSucceeded &&
+            markerSaved
+        ) {
             try {
-                stopForeground(STOP_FOREGROUND_REMOVE)
-            } catch (ex: Exception) {
-                Log.w(
+                pendingStopStorage.clear()
+
+                Log.i(
                     TAG,
-                    "vpn_foreground_stop_failed " +
-                            "type=${ex.javaClass.simpleName}"
+                    "vpn_stop_cleanup_marker_cleared id=$sessionId"
+                )
+            } catch (ex: Exception) {
+                persistenceCleanupSucceeded = false
+
+                Log.e(
+                    TAG,
+                    "vpn_stop_cleanup_marker_clear_failed id=$sessionId",
+                    ex
                 )
             }
-
-            Log.i(
-                TAG,
-                "vpn_session_stopped " +
-                        "id=$sessionId " +
-                        "key=${session.sessionKey} " +
-                        "reason=$reason"
-            )
-
-            if (requestStop) {
-                stopSelfResult(latestStartId)
-            }
         }
+
+        if (!markerSaved) {
+            persistenceCleanupSucceeded = false
+        }
+
+        // 5. Encerrar a sessão gerenciada pelo serviço.
+        // Isso não comprova, por si só, que uma
+        // falha anterior deixou todos os recursos fechados.
+        if (currentSession === session) {
+            currentSession = null
+        }
+
+        sessionGuard.finishStop(sessionId)
+
+        try {
+            stopForeground(STOP_FOREGROUND_REMOVE)
+            foregroundCleanupSucceeded = true
+        } catch (ex: Exception) {
+            Log.e(
+                TAG,
+                "vpn_foreground_stop_failed id=$sessionId",
+                ex
+            )
+        }
+
+        // 6. Classificar o encerramento.
+        val result = VpnStopResultResolver.resolve(
+            resourceCleanupSucceeded = resourceCleanupSucceeded,
+            persistenceCleanupSucceeded = persistenceCleanupSucceeded,
+            foregroundCleanupSucceeded = foregroundCleanupSucceeded
+        )
+
+        Log.i(
+            TAG,
+            "vpn_session_stopped " +
+                    "id=$sessionId " +
+                    "key=${session.sessionKey} " +
+                    "reason=$reason " +
+                    "result=$result"
+        )
+
+        if (requestStop) {
+            stopSelfResult(latestStartId)
+        }
+
+        return result
     }
 
     private fun promoteToForeground() {
@@ -868,26 +968,20 @@ class RebootDnsVpnService : VpnService() {
         try {
             // Uma consulta antiga da interface não
             // autoriza a parada. Validamos novamente.
-            val status = unlockCoordinator.getStatus(
-                session.sessionKey
+            val decision = stopAuthorization.evaluate(
+                activeSessionKey = session.sessionKey,
+                requestId = requestId,
+                vpnIsActive =
+                    currentSession === session &&
+                            !session.isStopped() &&
+                            sessionGuard.isActive(session.sessionId)
             )
 
-            val authorized =
-                status != null &&
-                        status.requestId == requestId &&
-                        status.state == UnlockRequestState.READY &&
-                        unlockCoordinator.canConfirm(
-                            protectionSessionKey = session.sessionKey,
-                            requestId = requestId
-                        ) &&
-                        currentSession === session &&
-                        sessionGuard.isActive(session.sessionId) &&
-                        !session.isStopped()
-
-            if (!authorized) {
+            if (decision != UnlockStopDecision.AUTHORIZED) {
                 Log.w(
                     TAG,
-                    "vpn_unlock_confirmation_rejected"
+                    "vpn_unlock_confirmation_rejected " +
+                            "reason=$decision"
                 )
 
                 getUnlockStatus(intent)
@@ -900,19 +994,44 @@ class RebootDnsVpnService : VpnService() {
                         "session=${session.sessionKey}"
             )
 
-            // Não existe temporizador chamando este método:
-            // somente um comando explícito de confirmação.
-            stopSession(
+
+            val stopResult = stopSession(
                 session = session,
                 reason = "unlock-confirmed",
                 requestStop = true
             )
 
-            reply(
-                intent,
-                state = "INACTIVE",
-                message = "Desativação confirmada."
-            )
+            when (stopResult) {
+                VpnStopResult.STOPPED -> {
+                    reply(
+                        intent,
+                        state = "INACTIVE",
+                        message = "Proteção desativada."
+                    )
+                }
+
+                VpnStopResult.STOPPED_WITH_ERRORS -> {
+                    reply(
+                        intent,
+                        state = "ERROR",
+                        message =
+                            "Houve uma falha durante o encerramento. " +
+                                    "Verifique o estado da VPN no Android."
+                    )
+                }
+
+                VpnStopResult.STALE_SESSION,
+                VpnStopResult.INVALID_STATE -> {
+                    Log.w(
+                        TAG,
+                        "vpn_unlock_stop_not_completed " +
+                                "result=$stopResult"
+                    )
+
+                    getUnlockStatus(intent)
+                }
+            }
+
         } catch (ex: Exception) {
             Log.e(
                 TAG,
@@ -926,6 +1045,17 @@ class RebootDnsVpnService : VpnService() {
                 message = "Não foi possível confirmar a desativação."
             )
         }
+    }
+    private val stopAuthorization by lazy {
+        UnlockStopAuthorization(
+            repository = unlockStorage,
+            elapsedRealtimeMillis = {
+                SystemClock.elapsedRealtime()
+            },
+            bootCount = {
+                currentBootCount()
+            }
+        )
     }
 
 

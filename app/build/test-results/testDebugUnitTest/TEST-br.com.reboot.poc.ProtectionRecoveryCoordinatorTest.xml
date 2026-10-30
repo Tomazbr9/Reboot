@@ -1,14 +1,14 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<testsuite name="br.com.reboot.poc.ProtectionRecoveryCoordinatorTest" tests="8" skipped="0" failures="0" errors="0" timestamp="2026-10-29T02:58:27.078Z" hostname="tomaz-IdeaPad-3-15ITL6" time="0.022">
+<testsuite name="br.com.reboot.poc.ProtectionRecoveryCoordinatorTest" tests="8" skipped="0" failures="0" errors="0" timestamp="2026-10-30T02:34:50.434Z" hostname="tomaz-IdeaPad-3-15ITL6" time="0.006">
   <properties/>
-  <testcase name="orphanUnlockIsClearedForDifferentSession" classname="br.com.reboot.poc.ProtectionRecoveryCoordinatorTest" time="0.007"/>
-  <testcase name="inactiveSessionClearsOldData" classname="br.com.reboot.poc.ProtectionRecoveryCoordinatorTest" time="0.004"/>
-  <testcase name="emptyStorageRequiresNoRecovery" classname="br.com.reboot.poc.ProtectionRecoveryCoordinatorTest" time="0.001"/>
+  <testcase name="orphanUnlockIsClearedForDifferentSession" classname="br.com.reboot.poc.ProtectionRecoveryCoordinatorTest" time="0.002"/>
+  <testcase name="inactiveSessionClearsOldData" classname="br.com.reboot.poc.ProtectionRecoveryCoordinatorTest" time="0.001"/>
+  <testcase name="emptyStorageRequiresNoRecovery" classname="br.com.reboot.poc.ProtectionRecoveryCoordinatorTest" time="0.0"/>
   <testcase name="activeMatchingSessionPreservesData" classname="br.com.reboot.poc.ProtectionRecoveryCoordinatorTest" time="0.001"/>
-  <testcase name="differentActiveSessionClearsOldData" classname="br.com.reboot.poc.ProtectionRecoveryCoordinatorTest" time="0.001"/>
-  <testcase name="orphanUnlockIsPreservedForMatchingActiveSession" classname="br.com.reboot.poc.ProtectionRecoveryCoordinatorTest" time="0.001"/>
+  <testcase name="differentActiveSessionClearsOldData" classname="br.com.reboot.poc.ProtectionRecoveryCoordinatorTest" time="0.0"/>
+  <testcase name="orphanUnlockIsPreservedForMatchingActiveSession" classname="br.com.reboot.poc.ProtectionRecoveryCoordinatorTest" time="0.0"/>
   <testcase name="unknownStatePreservesAllRecords" classname="br.com.reboot.poc.ProtectionRecoveryCoordinatorTest" time="0.001"/>
-  <testcase name="previousBootSessionIsClearedAfterVerification" classname="br.com.reboot.poc.ProtectionRecoveryCoordinatorTest" time="0.001"/>
+  <testcase name="previousBootSessionIsClearedAfterVerification" classname="br.com.reboot.poc.ProtectionRecoveryCoordinatorTest" time="0.0"/>
   <system-out><![CDATA[]]></system-out>
   <system-err><![CDATA[]]></system-err>
 </testsuite>

@@ -17,16 +17,18 @@
 13    <uses-permission android:name="android.permission.FOREGROUND_SERVICE_SYSTEM_EXEMPTED" />
 13-->/home/tomaz/Downloads/reboot-dns-vpn-poc-android/reboot-poc/app/src/main/AndroidManifest.xml:4:5-93
 13-->/home/tomaz/Downloads/reboot-dns-vpn-poc-android/reboot-poc/app/src/main/AndroidManifest.xml:4:22-90
-14
-15    <application
-15-->/home/tomaz/Downloads/reboot-dns-vpn-poc-android/reboot-poc/app/src/main/AndroidManifest.xml:5:5-19:19
-16        android:allowBackup="false"
-16-->/home/tomaz/Downloads/reboot-dns-vpn-poc-android/reboot-poc/app/src/main/AndroidManifest.xml:5:18-45
-17        android:debuggable="true"
-18        android:extractNativeLibs="false"
-19        android:label="Reboot DNS PoC"
-19-->/home/tomaz/Downloads/reboot-dns-vpn-poc-android/reboot-poc/app/src/main/AndroidManifest.xml:5:46-76
-20        android:testOnly="true"
+14    <uses-permission android:name="android.permission.REORDER_TASKS" />
+14-->[androidx.test:core:1.7.0] /home/tomaz/.gradle/caches/9.6.0/transforms/60623d0b1f15cea5ff375132604fc4db/transformed/core-1.7.0/AndroidManifest.xml:24:5-72
+14-->[androidx.test:core:1.7.0] /home/tomaz/.gradle/caches/9.6.0/transforms/60623d0b1f15cea5ff375132604fc4db/transformed/core-1.7.0/AndroidManifest.xml:24:22-69
+15
+16    <application
+16-->/home/tomaz/Downloads/reboot-dns-vpn-poc-android/reboot-poc/app/src/main/AndroidManifest.xml:5:5-19:19
+17        android:allowBackup="false"
+17-->/home/tomaz/Downloads/reboot-dns-vpn-poc-android/reboot-poc/app/src/main/AndroidManifest.xml:5:18-45
+18        android:debuggable="true"
+19        android:extractNativeLibs="false"
+20        android:label="Reboot DNS PoC"
+20-->/home/tomaz/Downloads/reboot-dns-vpn-poc-android/reboot-poc/app/src/main/AndroidManifest.xml:5:46-76
 21        android:theme="@android:style/Theme.Material.Light.NoActionBar"
 21-->/home/tomaz/Downloads/reboot-dns-vpn-poc-android/reboot-poc/app/src/main/AndroidManifest.xml:5:77-140
 22        android:usesCleartextTraffic="false" >
@@ -73,6 +75,55 @@
 44                android:value="false" />
 44-->/home/tomaz/Downloads/reboot-dns-vpn-poc-android/reboot-poc/app/src/main/AndroidManifest.xml:17:81-102
 45        </service>
-46    </application>
-47
-48</manifest>
+46
+47        <activity
+47-->[androidx.test:core:1.7.0] /home/tomaz/.gradle/caches/9.6.0/transforms/60623d0b1f15cea5ff375132604fc4db/transformed/core-1.7.0/AndroidManifest.xml:27:9-34:20
+48            android:name="androidx.test.core.app.InstrumentationActivityInvoker$BootstrapActivity"
+48-->[androidx.test:core:1.7.0] /home/tomaz/.gradle/caches/9.6.0/transforms/60623d0b1f15cea5ff375132604fc4db/transformed/core-1.7.0/AndroidManifest.xml:28:13-99
+49            android:exported="true"
+49-->[androidx.test:core:1.7.0] /home/tomaz/.gradle/caches/9.6.0/transforms/60623d0b1f15cea5ff375132604fc4db/transformed/core-1.7.0/AndroidManifest.xml:29:13-36
+50            android:theme="@style/WhiteBackgroundTheme" >
+50-->[androidx.test:core:1.7.0] /home/tomaz/.gradle/caches/9.6.0/transforms/60623d0b1f15cea5ff375132604fc4db/transformed/core-1.7.0/AndroidManifest.xml:30:13-56
+51            <intent-filter android:priority="-100" >
+51-->[androidx.test:core:1.7.0] /home/tomaz/.gradle/caches/9.6.0/transforms/60623d0b1f15cea5ff375132604fc4db/transformed/core-1.7.0/AndroidManifest.xml:31:13-33:29
+51-->[androidx.test:core:1.7.0] /home/tomaz/.gradle/caches/9.6.0/transforms/60623d0b1f15cea5ff375132604fc4db/transformed/core-1.7.0/AndroidManifest.xml:31:28-51
+52                <category android:name="android.intent.category.LAUNCHER" />
+52-->/home/tomaz/Downloads/reboot-dns-vpn-poc-android/reboot-poc/app/src/main/AndroidManifest.xml:9:17-77
+52-->/home/tomaz/Downloads/reboot-dns-vpn-poc-android/reboot-poc/app/src/main/AndroidManifest.xml:9:27-74
+53            </intent-filter>
+54        </activity>
+55        <activity
+55-->[androidx.test:core:1.7.0] /home/tomaz/.gradle/caches/9.6.0/transforms/60623d0b1f15cea5ff375132604fc4db/transformed/core-1.7.0/AndroidManifest.xml:35:9-42:20
+56            android:name="androidx.test.core.app.InstrumentationActivityInvoker$EmptyActivity"
+56-->[androidx.test:core:1.7.0] /home/tomaz/.gradle/caches/9.6.0/transforms/60623d0b1f15cea5ff375132604fc4db/transformed/core-1.7.0/AndroidManifest.xml:36:13-95
+57            android:exported="true"
+57-->[androidx.test:core:1.7.0] /home/tomaz/.gradle/caches/9.6.0/transforms/60623d0b1f15cea5ff375132604fc4db/transformed/core-1.7.0/AndroidManifest.xml:37:13-36
+58            android:theme="@style/WhiteBackgroundTheme" >
+58-->[androidx.test:core:1.7.0] /home/tomaz/.gradle/caches/9.6.0/transforms/60623d0b1f15cea5ff375132604fc4db/transformed/core-1.7.0/AndroidManifest.xml:38:13-56
+59            <intent-filter android:priority="-100" >
+59-->[androidx.test:core:1.7.0] /home/tomaz/.gradle/caches/9.6.0/transforms/60623d0b1f15cea5ff375132604fc4db/transformed/core-1.7.0/AndroidManifest.xml:31:13-33:29
+59-->[androidx.test:core:1.7.0] /home/tomaz/.gradle/caches/9.6.0/transforms/60623d0b1f15cea5ff375132604fc4db/transformed/core-1.7.0/AndroidManifest.xml:31:28-51
+60                <category android:name="android.intent.category.LAUNCHER" />
+60-->/home/tomaz/Downloads/reboot-dns-vpn-poc-android/reboot-poc/app/src/main/AndroidManifest.xml:9:17-77
+60-->/home/tomaz/Downloads/reboot-dns-vpn-poc-android/reboot-poc/app/src/main/AndroidManifest.xml:9:27-74
+61            </intent-filter>
+62        </activity>
+63        <activity
+63-->[androidx.test:core:1.7.0] /home/tomaz/.gradle/caches/9.6.0/transforms/60623d0b1f15cea5ff375132604fc4db/transformed/core-1.7.0/AndroidManifest.xml:43:9-50:20
+64            android:name="androidx.test.core.app.InstrumentationActivityInvoker$EmptyFloatingActivity"
+64-->[androidx.test:core:1.7.0] /home/tomaz/.gradle/caches/9.6.0/transforms/60623d0b1f15cea5ff375132604fc4db/transformed/core-1.7.0/AndroidManifest.xml:44:13-103
+65            android:exported="true"
+65-->[androidx.test:core:1.7.0] /home/tomaz/.gradle/caches/9.6.0/transforms/60623d0b1f15cea5ff375132604fc4db/transformed/core-1.7.0/AndroidManifest.xml:45:13-36
+66            android:theme="@style/WhiteBackgroundDialogTheme" >
+66-->[androidx.test:core:1.7.0] /home/tomaz/.gradle/caches/9.6.0/transforms/60623d0b1f15cea5ff375132604fc4db/transformed/core-1.7.0/AndroidManifest.xml:46:13-62
+67            <intent-filter android:priority="-100" >
+67-->[androidx.test:core:1.7.0] /home/tomaz/.gradle/caches/9.6.0/transforms/60623d0b1f15cea5ff375132604fc4db/transformed/core-1.7.0/AndroidManifest.xml:31:13-33:29
+67-->[androidx.test:core:1.7.0] /home/tomaz/.gradle/caches/9.6.0/transforms/60623d0b1f15cea5ff375132604fc4db/transformed/core-1.7.0/AndroidManifest.xml:31:28-51
+68                <category android:name="android.intent.category.LAUNCHER" />
+68-->/home/tomaz/Downloads/reboot-dns-vpn-poc-android/reboot-poc/app/src/main/AndroidManifest.xml:9:17-77
+68-->/home/tomaz/Downloads/reboot-dns-vpn-poc-android/reboot-poc/app/src/main/AndroidManifest.xml:9:27-74
+69            </intent-filter>
+70        </activity>
+71    </application>
+72
+73</manifest>

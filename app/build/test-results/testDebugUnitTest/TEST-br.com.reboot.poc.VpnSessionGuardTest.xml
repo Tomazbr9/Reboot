@@ -1,18 +1,18 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<testsuite name="br.com.reboot.poc.VpnSessionGuardTest" tests="12" skipped="0" failures="0" errors="0" timestamp="2026-10-29T02:58:27.230Z" hostname="tomaz-IdeaPad-3-15ITL6" time="0.005">
+<testsuite name="br.com.reboot.poc.VpnSessionGuardTest" tests="12" skipped="0" failures="0" errors="0" timestamp="2026-10-30T02:34:50.531Z" hostname="tomaz-IdeaPad-3-15ITL6" time="0.003">
   <properties/>
   <testcase name="oldSessionCannotFinishNewSession" classname="br.com.reboot.poc.VpnSessionGuardTest" time="0.0"/>
-  <testcase name="rejectsStartWhileStopping" classname="br.com.reboot.poc.VpnSessionGuardTest" time="0.0"/>
+  <testcase name="rejectsStartWhileStopping" classname="br.com.reboot.poc.VpnSessionGuardTest" time="0.001"/>
   <testcase name="rejectsStaleSession" classname="br.com.reboot.poc.VpnSessionGuardTest" time="0.0"/>
-  <testcase name="stopsActiveSession" classname="br.com.reboot.poc.VpnSessionGuardTest" time="0.001"/>
-  <testcase name="failedStartCanBeStopped" classname="br.com.reboot.poc.VpnSessionGuardTest" time="0.001"/>
-  <testcase name="stopDuringStartingPreventsActivation" classname="br.com.reboot.poc.VpnSessionGuardTest" time="0.0"/>
-  <testcase name="startsInactive" classname="br.com.reboot.poc.VpnSessionGuardTest" time="0.001"/>
+  <testcase name="stopsActiveSession" classname="br.com.reboot.poc.VpnSessionGuardTest" time="0.0"/>
+  <testcase name="failedStartCanBeStopped" classname="br.com.reboot.poc.VpnSessionGuardTest" time="0.0"/>
+  <testcase name="stopDuringStartingPreventsActivation" classname="br.com.reboot.poc.VpnSessionGuardTest" time="0.001"/>
+  <testcase name="startsInactive" classname="br.com.reboot.poc.VpnSessionGuardTest" time="0.0"/>
   <testcase name="repeatedStopDoesNotCreateSecondStop" classname="br.com.reboot.poc.VpnSessionGuardTest" time="0.0"/>
   <testcase name="activatesReservedSession" classname="br.com.reboot.poc.VpnSessionGuardTest" time="0.0"/>
-  <testcase name="rejectsDuplicateStart" classname="br.com.reboot.poc.VpnSessionGuardTest" time="0.001"/>
+  <testcase name="rejectsDuplicateStart" classname="br.com.reboot.poc.VpnSessionGuardTest" time="0.0"/>
   <testcase name="stoppingCanBeRequestedRepeatedly" classname="br.com.reboot.poc.VpnSessionGuardTest" time="0.0"/>
-  <testcase name="staleSessionCannotStopNewSession" classname="br.com.reboot.poc.VpnSessionGuardTest" time="0.0"/>
+  <testcase name="staleSessionCannotStopNewSession" classname="br.com.reboot.poc.VpnSessionGuardTest" time="0.001"/>
   <system-out><![CDATA[]]></system-out>
   <system-err><![CDATA[]]></system-err>
 </testsuite>

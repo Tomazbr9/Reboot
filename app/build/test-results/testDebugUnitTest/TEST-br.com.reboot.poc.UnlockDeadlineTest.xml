@@ -1,10 +1,10 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<testsuite name="br.com.reboot.poc.UnlockDeadlineTest" tests="5" skipped="0" failures="0" errors="0" timestamp="2026-10-29T02:58:27.143Z" hostname="tomaz-IdeaPad-3-15ITL6" time="0.006">
+<testsuite name="br.com.reboot.poc.UnlockDeadlineTest" tests="5" skipped="0" failures="0" errors="0" timestamp="2026-10-30T02:34:50.470Z" hostname="tomaz-IdeaPad-3-15ITL6" time="0.002">
   <properties/>
-  <testcase name="startsWhenUnlockIsRequested" classname="br.com.reboot.poc.UnlockDeadlineTest" time="0.002"/>
+  <testcase name="startsWhenUnlockIsRequested" classname="br.com.reboot.poc.UnlockDeadlineTest" time="0.001"/>
   <testcase name="rejectsInvalidRequestTime" classname="br.com.reboot.poc.UnlockDeadlineTest" time="0.0"/>
   <testcase name="unlockBecomesAvailableAtDeadline" classname="br.com.reboot.poc.UnlockDeadlineTest" time="0.0"/>
-  <testcase name="supportsFourDelays" classname="br.com.reboot.poc.UnlockDeadlineTest" time="0.0"/>
+  <testcase name="supportsFourDelays" classname="br.com.reboot.poc.UnlockDeadlineTest" time="0.001"/>
   <testcase name="cannotUnlockBeforeDeadline" classname="br.com.reboot.poc.UnlockDeadlineTest" time="0.0"/>
   <system-out><![CDATA[]]></system-out>
   <system-err><![CDATA[]]></system-err>

@@ -1,11 +1,11 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<testsuite name="br.com.reboot.poc.VpnOperationalSnapshotResolverTest" tests="6" skipped="0" failures="0" errors="0" timestamp="2026-10-29T02:58:27.200Z" hostname="tomaz-IdeaPad-3-15ITL6" time="0.011">
+<testsuite name="br.com.reboot.poc.VpnOperationalSnapshotResolverTest" tests="6" skipped="0" failures="0" errors="0" timestamp="2026-10-30T02:34:50.501Z" hostname="tomaz-IdeaPad-3-15ITL6" time="0.017">
   <properties/>
-  <testcase name="startingSessionReturnsUnknown" classname="br.com.reboot.poc.VpnOperationalSnapshotResolverTest" time="0.007"/>
-  <testcase name="closedSessionIsNotReportedAsActive" classname="br.com.reboot.poc.VpnOperationalSnapshotResolverTest" time="0.001"/>
+  <testcase name="startingSessionReturnsUnknown" classname="br.com.reboot.poc.VpnOperationalSnapshotResolverTest" time="0.004"/>
+  <testcase name="closedSessionIsNotReportedAsActive" classname="br.com.reboot.poc.VpnOperationalSnapshotResolverTest" time="0.0"/>
   <testcase name="stoppingSessionReturnsUnknown" classname="br.com.reboot.poc.VpnOperationalSnapshotResolverTest" time="0.0"/>
-  <testcase name="activeSessionReturnsMatchingUuid" classname="br.com.reboot.poc.VpnOperationalSnapshotResolverTest" time="0.001"/>
-  <testcase name="staleSessionIsNotReportedAsActive" classname="br.com.reboot.poc.VpnOperationalSnapshotResolverTest" time="0.001"/>
+  <testcase name="activeSessionReturnsMatchingUuid" classname="br.com.reboot.poc.VpnOperationalSnapshotResolverTest" time="0.011"/>
+  <testcase name="staleSessionIsNotReportedAsActive" classname="br.com.reboot.poc.VpnOperationalSnapshotResolverTest" time="0.0"/>
   <testcase name="noSessionReturnsUnknown" classname="br.com.reboot.poc.VpnOperationalSnapshotResolverTest" time="0.0"/>
   <system-out><![CDATA[]]></system-out>
   <system-err><![CDATA[]]></system-err>

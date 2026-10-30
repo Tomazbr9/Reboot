@@ -1,11 +1,11 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<testsuite name="br.com.reboot.poc.ProtectionSessionRecorderTest" tests="5" skipped="0" failures="0" errors="0" timestamp="2026-10-29T02:58:27.132Z" hostname="tomaz-IdeaPad-3-15ITL6" time="0.007">
+<testsuite name="br.com.reboot.poc.ProtectionSessionRecorderTest" tests="5" skipped="0" failures="0" errors="0" timestamp="2026-10-30T02:34:50.455Z" hostname="tomaz-IdeaPad-3-15ITL6" time="0.003">
   <properties/>
-  <testcase name="newActivationInvalidatesOldUnlock" classname="br.com.reboot.poc.ProtectionSessionRecorderTest" time="0.001"/>
+  <testcase name="newActivationInvalidatesOldUnlock" classname="br.com.reboot.poc.ProtectionSessionRecorderTest" time="0.0"/>
   <testcase name="oldStopCannotClearNewSession" classname="br.com.reboot.poc.ProtectionSessionRecorderTest" time="0.001"/>
-  <testcase name="normalStopClearsMatchingRecord" classname="br.com.reboot.poc.ProtectionSessionRecorderTest" time="0.0"/>
-  <testcase name="activationPersistsSession" classname="br.com.reboot.poc.ProtectionSessionRecorderTest" time="0.001"/>
-  <testcase name="stopDoesNotClearOtherSessionsUnlock" classname="br.com.reboot.poc.ProtectionSessionRecorderTest" time="0.001"/>
+  <testcase name="normalStopClearsMatchingRecord" classname="br.com.reboot.poc.ProtectionSessionRecorderTest" time="0.001"/>
+  <testcase name="activationPersistsSession" classname="br.com.reboot.poc.ProtectionSessionRecorderTest" time="0.0"/>
+  <testcase name="stopDoesNotClearOtherSessionsUnlock" classname="br.com.reboot.poc.ProtectionSessionRecorderTest" time="0.0"/>
   <system-out><![CDATA[]]></system-out>
   <system-err><![CDATA[]]></system-err>
 </testsuite>

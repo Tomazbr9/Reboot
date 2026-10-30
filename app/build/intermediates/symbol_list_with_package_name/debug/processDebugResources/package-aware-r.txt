@@ -1,0 +1,3 @@
+br.com.reboot.poc
+style WhiteBackgroundDialogTheme
+style WhiteBackgroundTheme

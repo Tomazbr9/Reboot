@@ -24,20 +24,65 @@ class ProtectionSessionRecorder(
         sessions.save(record)
     }
 
+    /**
+     * API existente, mantida para compatibilidade
+     * com os outros componentes e testes.
+     */
     @Synchronized
     fun onStopped(sessionKey: String): Boolean {
-        val saved = sessions.load() ?: return false
+        return onStoppedDetailed(sessionKey) ==
+                ProtectionStopCleanupResult.CLEANED
+    }
 
-        // Uma parada antiga não pode apagar
-        // a sessão que foi iniciada depois.
-        if (saved.sessionKey != sessionKey) {
-            return false
+    /**
+     * Limpeza idempotente dos dados persistidos
+     * associados à sessão encerrada.
+     *
+     * Não apaga registros de uma sessão diferente.
+     *
+     * Falhas de persistência são propagadas para
+     * permitir diagnóstico e nova tentativa.
+     */
+    @Synchronized
+    fun onStoppedDetailed(
+        sessionKey: String
+    ): ProtectionStopCleanupResult {
+
+        val savedSession = sessions.load()
+        val savedUnlock = unlocks.load()
+
+        // Um registro de outra sessão não deve
+        // ser alterado por esta operação.
+        if (
+            savedSession != null &&
+            savedSession.sessionKey != sessionKey
+        ) {
+            return ProtectionStopCleanupResult.SESSION_MISMATCH
         }
 
-        clearUnlockFor(sessionKey)
-        sessions.clear()
+        var removedSomething = false
 
-        return true
+        // Remove primeiro o pedido pertencente
+        // à sessão encerrada.
+        if (
+            savedUnlock?.protectionSessionKey ==
+            sessionKey
+        ) {
+            unlocks.clear()
+            removedSomething = true
+        }
+
+        // Remove depois o registro da sessão.
+        if (savedSession != null) {
+            sessions.clear()
+            removedSomething = true
+        }
+
+        return if (removedSomething) {
+            ProtectionStopCleanupResult.CLEANED
+        } else {
+            ProtectionStopCleanupResult.ALREADY_CLEAN
+        }
     }
 
     private fun clearUnlockFor(sessionKey: String) {

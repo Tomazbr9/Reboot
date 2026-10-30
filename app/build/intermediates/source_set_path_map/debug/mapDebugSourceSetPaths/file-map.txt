@@ -1,7 +1,9 @@
-br.com.reboot.poc.app-pngs-0 /home/tomaz/Downloads/reboot-dns-vpn-poc-android/reboot-poc/app/build/generated/res/pngs/debug
-br.com.reboot.poc.app-resValues-1 /home/tomaz/Downloads/reboot-dns-vpn-poc-android/reboot-poc/app/build/generated/res/resValues/debug
-br.com.reboot.poc.app-packageDebugResources-2 /home/tomaz/Downloads/reboot-dns-vpn-poc-android/reboot-poc/app/build/intermediates/incremental/debug/packageDebugResources/merged.dir
-br.com.reboot.poc.app-packageDebugResources-3 /home/tomaz/Downloads/reboot-dns-vpn-poc-android/reboot-poc/app/build/intermediates/incremental/debug/packageDebugResources/stripped.dir
-br.com.reboot.poc.app-debug-4 /home/tomaz/Downloads/reboot-dns-vpn-poc-android/reboot-poc/app/build/intermediates/merged_res/debug/mergeDebugResources
-br.com.reboot.poc.app-debug-5 /home/tomaz/Downloads/reboot-dns-vpn-poc-android/reboot-poc/app/src/debug/res
-br.com.reboot.poc.app-main-6 /home/tomaz/Downloads/reboot-dns-vpn-poc-android/reboot-poc/app/src/main/res
+br.com.reboot.poc.app-core-1.7.0-0 /home/tomaz/.gradle/caches/9.6.0/transforms/60623d0b1f15cea5ff375132604fc4db/transformed/core-1.7.0/res
+br.com.reboot.poc.app-tracing-1.1.0-1 /home/tomaz/.gradle/caches/9.6.0/transforms/a710e841ad16fbf57f5a9128815a2095/transformed/tracing-1.1.0/res
+br.com.reboot.poc.app-pngs-2 /home/tomaz/Downloads/reboot-dns-vpn-poc-android/reboot-poc/app/build/generated/res/pngs/debug
+br.com.reboot.poc.app-resValues-3 /home/tomaz/Downloads/reboot-dns-vpn-poc-android/reboot-poc/app/build/generated/res/resValues/debug
+br.com.reboot.poc.app-packageDebugResources-4 /home/tomaz/Downloads/reboot-dns-vpn-poc-android/reboot-poc/app/build/intermediates/incremental/debug/packageDebugResources/merged.dir
+br.com.reboot.poc.app-packageDebugResources-5 /home/tomaz/Downloads/reboot-dns-vpn-poc-android/reboot-poc/app/build/intermediates/incremental/debug/packageDebugResources/stripped.dir
+br.com.reboot.poc.app-debug-6 /home/tomaz/Downloads/reboot-dns-vpn-poc-android/reboot-poc/app/build/intermediates/merged_res/debug/mergeDebugResources
+br.com.reboot.poc.app-debug-7 /home/tomaz/Downloads/reboot-dns-vpn-poc-android/reboot-poc/app/src/debug/res
+br.com.reboot.poc.app-main-8 /home/tomaz/Downloads/reboot-dns-vpn-poc-android/reboot-poc/app/src/main/res

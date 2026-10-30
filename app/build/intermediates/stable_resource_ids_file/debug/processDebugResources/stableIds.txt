@@ -1,0 +1,2 @@
+br.com.reboot.poc:style/WhiteBackgroundTheme = 0x7f010001
+br.com.reboot.poc:style/WhiteBackgroundDialogTheme = 0x7f010000
